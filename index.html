@@ -1,0 +1,1924 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Авторские туры с гидом — индивидуальные и групповые маршруты</title>
+  <meta name="description" content="Авторские туры с частным гидом. Горы, треккинг, городские маршруты. Опыт более 10 лет, лицензированный гид." />
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            night:   { 50:'#f4f6f8', 100:'#e6ebef', 200:'#c4cfd7', 300:'#9babb7', 400:'#6c8290', 500:'#496073', 600:'#36495a', 700:'#293948', 800:'#1c2733', 900:'#10171f' },
+            sand:    { 50:'#fbf8f3', 100:'#f5ecdb', 200:'#ead7b1', 300:'#dcbb84', 400:'#cfa05b', 500:'#bf8537', 600:'#9c6a2a', 700:'#754e21', 800:'#4f351a', 900:'#2a1d10' },
+            accent:  '#d97706'
+          },
+          fontFamily: {
+            sans:    ['Inter', 'system-ui', 'sans-serif'],
+            display: ['"Playfair Display"', 'serif']
+          },
+          animation: {
+            'fade-in':  'fadeIn 1s ease-out forwards',
+            'slow-zoom':'slowZoom 20s ease-out forwards',
+            'float':    'float 6s ease-in-out infinite'
+          },
+          keyframes: {
+            fadeIn:   { '0%': { opacity: 0, transform: 'translateY(20px)' }, '100%': { opacity: 1, transform: 'translateY(0)' } },
+            slowZoom: { '0%': { transform: 'scale(1)' }, '100%': { transform: 'scale(1.1)' } },
+            float:    { '0%,100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-12px)' } }
+          }
+        }
+      }
+    };
+  </script>
+
+  <link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;500;700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <style>
+    html { scroll-behavior: smooth; overflow-x: hidden; }
+    body { font-family: 'Inter', system-ui, sans-serif; color: #1c2733; background: #fbf8f3; overflow-x: hidden; width: 100%; }
+    * { box-sizing: border-box; }
+    img { max-width: 100%; height: auto; }
+    /* Leaflet override — иначе тайлы карты ломаются */
+    .leaflet-container img,
+    .leaflet-tile,
+    .leaflet-marker-icon,
+    .leaflet-marker-shadow,
+    .leaflet-image-layer,
+    .leaflet-tile-container img {
+      max-width: none !important;
+      height: auto;
+    }
+    .leaflet-container { background: #ddd; }
+    .font-display { font-family: 'Playfair Display', serif; }
+
+    /* === Mobile fixes === */
+    @media (max-width: 767px) {
+      section { padding-top: 64px !important; padding-bottom: 64px !important; }
+      .hero-bg { min-height: 100svh; }
+      h1 { word-break: break-word; }
+      .booking-step-label { font-size: 10px !important; }
+    }
+
+    .hero-bg {
+      background-image:
+        linear-gradient(rgba(16,23,31,.55), rgba(16,23,31,.75)),
+        url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=2000&q=80');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+    }
+    @media (max-width: 768px) { .hero-bg { background-attachment: scroll; } }
+
+    .tour-card .tour-img { transition: transform .8s ease; }
+    .tour-card:hover .tour-img { transform: scale(1.08); }
+    .tour-card { transition: transform .35s ease, box-shadow .35s ease; cursor: pointer; }
+    .tour-card:hover { transform: translateY(-6px); box-shadow: 0 25px 50px -12px rgba(0,0,0,.25); }
+
+    .btn-primary { background: #d97706; color: white; transition: all .3s ease; }
+    .btn-primary:hover { background: #b45309; transform: translateY(-2px); box-shadow: 0 10px 25px -5px rgba(217,119,6,.4); }
+    .btn-outline { border: 2px solid #fff; color: white; transition: all .3s ease; }
+    .btn-outline:hover { background: #fff; color: #10171f; }
+
+    .nav-scrolled { background: rgba(255,255,255,.95) !important; backdrop-filter: blur(12px); box-shadow: 0 4px 20px rgba(0,0,0,.08); }
+    .nav-scrolled .nav-link { color: #1c2733 !important; }
+    .nav-scrolled .logo-text { color: #10171f !important; }
+    .nav-scrolled .logo-sub { color: #496073 !important; }
+    .nav-scrolled #mobileMenuBtn {
+      background: #f5ecdb !important; color: #10171f !important; border-color: #e6ebef !important;
+    }
+    .nav-scrolled .lang-btn { color: #496073 !important; }
+    .nav-scrolled .lang-btn.lang-active { color: #d97706 !important; }
+
+    .faq-item { transition: all .3s ease; }
+    .faq-item[open] .faq-icon { transform: rotate(45deg); }
+    .faq-icon { transition: transform .3s ease; }
+
+    .gallery-item { overflow: hidden; position: relative; cursor: pointer; }
+    .gallery-item img { transition: transform .6s ease; }
+    .gallery-item:hover img { transform: scale(1.1); }
+    .gallery-item::after {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,.5), transparent);
+      opacity: 0; transition: opacity .3s ease;
+    }
+    .gallery-item:hover::after { opacity: 1; }
+
+    .lightbox { position: fixed; inset: 0; background: rgba(0,0,0,.92); z-index: 100; display: none; align-items: center; justify-content: center; }
+    .lightbox.active { display: flex; }
+    .lightbox img { max-width: 90%; max-height: 90vh; border-radius: 8px; }
+    .lightbox-close { position: absolute; top: 24px; right: 24px; color: white; font-size: 32px; cursor: pointer; background: none; border: none; }
+
+    .step-indicator { transition: all .3s ease; }
+    .step-indicator.active { background: #d97706; color: white; }
+    .step-indicator.completed { background: #16a34a; color: white; }
+    .form-step { display: none; }
+    .form-step.active { display: block; animation: fadeIn .4s ease-out; }
+
+    .stars { color: #fbbf24; }
+
+    .admin-panel { position: fixed; top: 0; right: -480px; width: 480px; max-width: 100vw; height: 100vh; background: white; z-index: 90; transition: right .4s ease; box-shadow: -20px 0 60px rgba(0,0,0,.2); overflow-y: auto; }
+    .admin-panel.open { right: 0; }
+    .admin-fab { position: fixed; bottom: 24px; right: 24px; z-index: 80; }
+
+    #routesMap { height: 480px; border-radius: 16px; z-index: 1; }
+
+    ::selection { background: #d97706; color: white; }
+
+    ::-webkit-scrollbar { width: 10px; height: 10px; }
+    ::-webkit-scrollbar-track { background: #f5ecdb; }
+    ::-webkit-scrollbar-thumb { background: #cfa05b; border-radius: 5px; }
+    ::-webkit-scrollbar-thumb:hover { background: #bf8537; }
+
+    .scroll-indicator { animation: bounce 2s infinite; }
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+      40% { transform: translateY(-15px); }
+      60% { transform: translateY(-8px); }
+    }
+
+    .lang-active { color: #d97706 !important; font-weight: 700; }
+
+    /* Tour detail modal */
+    .tour-detail-modal {
+      position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 100;
+      display: none; align-items: flex-start; justify-content: center;
+      overflow-y: auto; padding: 16px 8px;
+    }
+    @media (min-width: 768px) {
+      .tour-detail-modal { padding: 24px 12px; }
+    }
+    .tour-detail-modal.active { display: flex; }
+    .tour-detail-content {
+      background: white; border-radius: 16px; max-width: 1000px; width: 100%;
+      overflow: hidden; animation: fadeIn .4s ease-out; margin: auto;
+    }
+    @media (min-width: 768px) {
+      .tour-detail-content { border-radius: 24px; }
+    }
+    .tour-detail-hero {
+      position: relative; height: 220px; background-size: cover; background-position: center;
+    }
+    @media (min-width: 768px) {
+      .tour-detail-hero { height: 360px; }
+    }
+    .tour-detail-hero::after {
+      content:''; position:absolute; inset:0;
+      background: linear-gradient(to top, rgba(0,0,0,.7), rgba(0,0,0,.1));
+    }
+    .tour-detail-hero > * { position: relative; z-index: 1; }
+    .tour-detail-close {
+      position: absolute; top: 20px; right: 20px; width: 44px; height: 44px;
+      border-radius: 50%; background: rgba(255,255,255,.9); color: #1c2733;
+      border: none; font-size: 22px; cursor: pointer; z-index: 2;
+      display: flex; align-items: center; justify-content: center;
+      transition: all .2s;
+    }
+    .tour-detail-close:hover { background: white; transform: rotate(90deg); }
+  </style>
+</head>
+
+<body class="bg-sand-50 text-night-800">
+
+<!-- ============== NAVIGATION ============== -->
+<nav id="navbar" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300">
+  <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+    <a href="#home" class="flex items-center gap-3">
+      <div class="w-11 h-11 rounded-full bg-accent flex items-center justify-center text-white text-xl">▲</div>
+      <div>
+        <div class="logo-text text-white font-display text-xl leading-tight" data-i18n="brand">Андрей Гид</div>
+        <div class="logo-sub text-white/70 text-xs tracking-wider uppercase" data-i18n="brandSub">авторские маршруты</div>
+      </div>
+    </a>
+
+    <div class="hidden lg:flex items-center gap-8">
+      <a href="#tours"    class="nav-link text-white/90 hover:text-accent text-sm font-medium" data-i18n="nav.tours">Туры</a>
+      <a href="#about"    class="nav-link text-white/90 hover:text-accent text-sm font-medium" data-i18n="nav.about">О гиде</a>
+      <a href="#gallery"  class="nav-link text-white/90 hover:text-accent text-sm font-medium" data-i18n="nav.gallery">Галерея</a>
+      <a href="#reviews"  class="nav-link text-white/90 hover:text-accent text-sm font-medium" data-i18n="nav.reviews">Отзывы</a>
+      <a href="#map"      class="nav-link text-white/90 hover:text-accent text-sm font-medium" data-i18n="nav.map">Маршруты</a>
+      <a href="#blog"     class="nav-link text-white/90 hover:text-accent text-sm font-medium" data-i18n="nav.blog">Блог</a>
+      <a href="#faq"      class="nav-link text-white/90 hover:text-accent text-sm font-medium" data-i18n="nav.faq">FAQ</a>
+      <a href="#contacts" class="nav-link text-white/90 hover:text-accent text-sm font-medium" data-i18n="nav.contacts">Контакты</a>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <div class="hidden md:flex items-center gap-2 text-sm">
+        <button class="nav-link lang-btn lang-active text-white" data-lang="ru">RU</button>
+        <span class="text-white/40">|</span>
+        <button class="nav-link lang-btn text-white/70" data-lang="en">EN</button>
+      </div>
+      <a href="#booking" class="btn-primary px-5 py-2.5 rounded-full text-sm font-semibold hidden md:inline-block" data-i18n="nav.book">Забронировать</a>
+      <button id="mobileMenuBtn" aria-label="Menu" class="lg:hidden w-11 h-11 flex items-center justify-center rounded-full bg-white/15 backdrop-blur-sm text-white text-xl border border-white/30 hover:bg-white/25 transition">☰</button>
+    </div>
+  </div>
+
+  <div id="mobileMenu" class="hidden lg:hidden bg-night-900/95 backdrop-blur-md">
+    <div class="px-6 py-4 space-y-3">
+      <a href="#tours"    class="block text-white py-2 border-b border-white/10" data-i18n="nav.tours">Туры</a>
+      <a href="#about"    class="block text-white py-2 border-b border-white/10" data-i18n="nav.about">О гиде</a>
+      <a href="#gallery"  class="block text-white py-2 border-b border-white/10" data-i18n="nav.gallery">Галерея</a>
+      <a href="#reviews"  class="block text-white py-2 border-b border-white/10" data-i18n="nav.reviews">Отзывы</a>
+      <a href="#map"      class="block text-white py-2 border-b border-white/10" data-i18n="nav.map">Маршруты</a>
+      <a href="#blog"     class="block text-white py-2 border-b border-white/10" data-i18n="nav.blog">Блог</a>
+      <a href="#faq"      class="block text-white py-2 border-b border-white/10" data-i18n="nav.faq">FAQ</a>
+      <a href="#contacts" class="block text-white py-2 border-b border-white/10" data-i18n="nav.contacts">Контакты</a>
+      <div class="flex items-center gap-3 py-2 text-white">
+        <button class="lang-btn lang-active" data-lang="ru">RU</button>
+        <span class="text-white/40">|</span>
+        <button class="lang-btn text-white/70" data-lang="en">EN</button>
+      </div>
+      <a href="#booking" class="block text-center btn-primary py-3 rounded-full font-semibold mt-3" data-i18n="nav.book">Забронировать</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ============== HERO ============== -->
+<section id="home" class="hero-bg relative min-h-screen flex items-center text-white overflow-hidden">
+  <div class="max-w-7xl mx-auto px-6 pt-24 pb-32 relative z-10">
+    <div class="max-w-3xl">
+      <div class="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-4 py-2 text-xs uppercase tracking-widest mb-6 animate-fade-in">
+        <span class="w-2 h-2 bg-accent rounded-full animate-pulse"></span>
+        <span data-i18n="hero.badge">Лицензированный гид · 10+ лет опыта</span>
+      </div>
+
+      <h1 class="font-display text-4xl sm:text-5xl md:text-7xl lg:text-8xl leading-[1.05] mb-6 animate-fade-in" style="animation-delay:.2s; opacity:0;">
+        <span data-i18n="hero.title1">Авторские туры</span><br/>
+        <span class="text-accent italic" data-i18n="hero.title2">в твой ритм</span>
+      </h1>
+
+      <p class="text-lg md:text-xl text-white/85 max-w-2xl mb-10 animate-fade-in" style="animation-delay:.4s; opacity:0;" data-i18n="hero.sub">
+        Индивидуальные и групповые маршруты в горы, по городу и за горизонт.
+        Покажу вам то, что не найти в путеводителях — местечки, истории и виды, ради которых стоит приехать.
+      </p>
+
+      <div class="flex flex-wrap gap-4 animate-fade-in" style="animation-delay:.6s; opacity:0;">
+        <a href="#tours" class="btn-primary px-8 py-4 rounded-full font-semibold inline-flex items-center gap-2">
+          <span data-i18n="hero.btn1">Посмотреть туры</span>
+          <span>→</span>
+        </a>
+        <a href="#booking" class="btn-outline px-8 py-4 rounded-full font-semibold inline-flex items-center gap-2" data-i18n="hero.btn2">
+          Оставить заявку
+        </a>
+      </div>
+
+      <div class="grid grid-cols-3 gap-6 md:gap-12 max-w-2xl mt-16 animate-fade-in" style="animation-delay:.8s; opacity:0;">
+        <div>
+          <div class="font-display text-4xl md:text-5xl text-accent">500+</div>
+          <div class="text-sm text-white/70 mt-1" data-i18n="hero.stat1">довольных гостей</div>
+        </div>
+        <div>
+          <div class="font-display text-4xl md:text-5xl text-accent">24</div>
+          <div class="text-sm text-white/70 mt-1" data-i18n="hero.stat2">маршрута</div>
+        </div>
+        <div>
+          <div class="font-display text-4xl md:text-5xl text-accent">4.9</div>
+          <div class="text-sm text-white/70 mt-1" data-i18n="hero.stat3">из 5 на TripAdvisor</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="absolute bottom-8 left-1/2 -translate-x-1/2 scroll-indicator">
+    <a href="#tours" class="text-white/70 text-xs uppercase tracking-widest flex flex-col items-center gap-2">
+      <span data-i18n="hero.scroll">Вниз</span>
+      <span class="w-px h-12 bg-white/50"></span>
+    </a>
+  </div>
+</section>
+
+<!-- ============== TOURS ============== -->
+<section id="tours" class="py-24 bg-sand-50 relative">
+  <div class="max-w-7xl mx-auto px-6">
+    <div class="text-center mb-16" data-aos="fade-up">
+      <div class="text-accent text-sm uppercase tracking-widest mb-3" data-i18n="tours.kicker">Что я предлагаю</div>
+      <h2 class="font-display text-3xl sm:text-4xl md:text-6xl text-night-900 mb-4" data-i18n="tours.title">Туры и маршруты</h2>
+      <p class="text-night-500 max-w-2xl mx-auto" data-i18n="tours.sub">
+        Каждый маршрут продуман до мелочей. Вы можете выбрать готовую программу или собрать тур под себя.
+      </p>
+    </div>
+
+    <div class="flex flex-wrap justify-center gap-3 mb-12" data-aos="fade-up" id="tourFilters">
+      <button class="tour-filter active px-5 py-2 rounded-full bg-night-900 text-white text-sm font-medium" data-cat="all" data-i18n="tours.f.all">Все туры</button>
+      <button class="tour-filter px-5 py-2 rounded-full bg-white text-night-700 text-sm font-medium border border-night-200" data-cat="mountain" data-i18n="tours.f.mountain">Горы</button>
+      <button class="tour-filter px-5 py-2 rounded-full bg-white text-night-700 text-sm font-medium border border-night-200" data-cat="city" data-i18n="tours.f.city">Город</button>
+      <button class="tour-filter px-5 py-2 rounded-full bg-white text-night-700 text-sm font-medium border border-night-200" data-cat="trek" data-i18n="tours.f.trek">Треккинг</button>
+      <button class="tour-filter px-5 py-2 rounded-full bg-white text-night-700 text-sm font-medium border border-night-200" data-cat="gastro" data-i18n="tours.f.gastro">Гастрономия</button>
+    </div>
+
+    <div id="toursGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
+
+    <div class="text-center mt-12" data-aos="fade-up">
+      <a href="#booking" class="inline-flex items-center gap-2 text-accent font-semibold hover:gap-3 transition-all" data-i18n="tours.cta">
+        Не нашли подходящего? Обсудим индивидуальный маршрут →
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ============== ABOUT ============== -->
+<section id="about" class="py-24 bg-white relative">
+  <div class="max-w-7xl mx-auto px-6">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+      <div data-aos="fade-right" class="relative">
+        <div class="relative rounded-2xl overflow-hidden">
+          <img src="https://images.unsplash.com/photo-1551632811-561732d1e306?auto=format&fit=crop&w=900&q=80"
+               alt="Гид в горах" class="w-full h-[380px] sm:h-[480px] md:h-[600px] object-cover" />
+        </div>
+        <div class="absolute -bottom-4 right-2 sm:-bottom-6 sm:-right-6 bg-accent text-white p-4 sm:p-6 rounded-2xl shadow-xl max-w-[200px] sm:max-w-xs">
+          <div class="font-display text-4xl">10+</div>
+          <div class="text-sm mt-1" data-i18n="about.exp">лет провожу туры в этих местах</div>
+        </div>
+      </div>
+
+      <div data-aos="fade-left" class="mt-8 lg:mt-0">
+        <div class="text-accent text-sm uppercase tracking-widest mb-3" data-i18n="about.kicker">О гиде</div>
+        <h2 class="font-display text-3xl sm:text-4xl md:text-5xl text-night-900 mb-6" data-i18n="about.title">Андрей.<br/>Гид, фотограф, рассказчик.</h2>
+
+        <p class="text-night-600 mb-5 leading-relaxed" data-i18n="about.p1">
+          Привет! Я Андрей. Уже больше десяти лет вожу путешественников по своим любимым маршрутам — от рассветных троп в горах до уютных кофеен старого города. Каждый тур для меня — это не просто прогулка, а возможность поделиться местом, которое люблю.
+        </p>
+
+        <p class="text-night-600 mb-8 leading-relaxed" data-i18n="about.p2">
+          У меня есть лицензия гида-проводника, сертификаты по горной подготовке и базовой медицине. Веду экскурсии на двух языках, но главное — стараюсь, чтобы каждому было комфортно: и тем, кто впервые в горах, и тем, кто уже опытный путешественник.
+        </p>
+
+        <div class="grid grid-cols-2 gap-4 mb-8">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-full bg-accent/10 text-accent flex items-center justify-center flex-shrink-0">🎓</div>
+            <div>
+              <div class="font-semibold text-night-900" data-i18n="about.license">Лицензия гида</div>
+              <div class="text-sm text-night-500" data-i18n="about.licenseSub">с 2014 года</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-full bg-accent/10 text-accent flex items-center justify-center flex-shrink-0">🌍</div>
+            <div>
+              <div class="font-semibold text-night-900" data-i18n="about.langs">2 языка</div>
+              <div class="text-sm text-night-500">RU · EN</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-full bg-accent/10 text-accent flex items-center justify-center flex-shrink-0">⛑️</div>
+            <div>
+              <div class="font-semibold text-night-900" data-i18n="about.certs">Сертификация</div>
+              <div class="text-sm text-night-500" data-i18n="about.certsSub">Первая помощь, горная подготовка</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-full bg-accent/10 text-accent flex items-center justify-center flex-shrink-0">📸</div>
+            <div>
+              <div class="font-semibold text-night-900" data-i18n="about.photo">Фотограф</div>
+              <div class="text-sm text-night-500" data-i18n="about.photoSub">Сделаю кадры в подарок</div>
+            </div>
+          </div>
+        </div>
+
+        <a href="#booking" class="btn-primary px-7 py-3.5 rounded-full font-semibold inline-flex items-center gap-2">
+          <span data-i18n="about.cta">Поехали со мной</span>
+          <span>→</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============== BOOKING ============== -->
+<section id="booking" class="py-24 bg-night-900 text-white relative overflow-hidden">
+  <div class="absolute inset-0 opacity-10" style="background-image: url('https://images.unsplash.com/photo-1486870591958-9b9d0d1dda99?auto=format&fit=crop&w=2000&q=80'); background-size:cover; background-position:center;"></div>
+
+  <div class="max-w-4xl mx-auto px-6 relative">
+    <div class="text-center mb-12" data-aos="fade-up">
+      <div class="text-accent text-sm uppercase tracking-widest mb-3" data-i18n="booking.kicker">Бронирование</div>
+      <h2 class="font-display text-3xl sm:text-4xl md:text-6xl mb-4" data-i18n="booking.title">Оставьте заявку</h2>
+      <p class="text-white/70 max-w-2xl mx-auto" data-i18n="booking.sub">Заполните форму — я свяжусь в течение часа в рабочее время. Предоплата не требуется.</p>
+    </div>
+
+    <div class="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-4 sm:p-6 md:p-10" data-aos="fade-up">
+      <div class="flex justify-between mb-10 relative">
+        <div class="absolute top-5 left-0 right-0 h-0.5 bg-white/20"></div>
+        <div class="absolute top-5 left-0 h-0.5 bg-accent transition-all duration-500" id="stepProgress" style="width:0%"></div>
+        <div class="flex flex-col items-center relative z-10">
+          <div class="step-indicator active w-10 h-10 rounded-full bg-white/10 flex items-center justify-center font-semibold" data-step="1">1</div>
+          <div class="text-xs mt-2 text-white/70 booking-step-label" data-i18n="booking.step1">Тур</div>
+        </div>
+        <div class="flex flex-col items-center relative z-10">
+          <div class="step-indicator w-10 h-10 rounded-full bg-white/10 flex items-center justify-center font-semibold" data-step="2">2</div>
+          <div class="text-xs mt-2 text-white/70 booking-step-label" data-i18n="booking.step2">Дата</div>
+        </div>
+        <div class="flex flex-col items-center relative z-10">
+          <div class="step-indicator w-10 h-10 rounded-full bg-white/10 flex items-center justify-center font-semibold" data-step="3">3</div>
+          <div class="text-xs mt-2 text-white/70 booking-step-label" data-i18n="booking.step3">Гости</div>
+        </div>
+        <div class="flex flex-col items-center relative z-10">
+          <div class="step-indicator w-10 h-10 rounded-full bg-white/10 flex items-center justify-center font-semibold" data-step="4">4</div>
+          <div class="text-xs mt-2 text-white/70 booking-step-label" data-i18n="booking.step4">Контакты</div>
+        </div>
+      </div>
+
+      <form id="bookingForm">
+        <div class="form-step active" data-step="1">
+          <h3 class="font-display text-2xl mb-6" data-i18n="booking.s1.title">Выберите тур</h3>
+          <div id="bookingTours" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+        </div>
+
+        <div class="form-step" data-step="2">
+          <h3 class="font-display text-2xl mb-6" data-i18n="booking.s2.title">Когда удобно?</h3>
+          <label class="block text-sm text-white/70 mb-2" data-i18n="booking.s2.date">Желаемая дата</label>
+          <input type="date" name="date" class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white" />
+          <label class="block text-sm text-white/70 mb-2 mt-5" data-i18n="booking.s2.flex">Гибкость по датам</label>
+          <select name="flex" class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white">
+            <option class="bg-night-800" value="exact" data-i18n="booking.s2.exact">Только эта дата</option>
+            <option class="bg-night-800" value="3days" data-i18n="booking.s2.3days">± 3 дня</option>
+            <option class="bg-night-800" value="week" data-i18n="booking.s2.week">Эта неделя</option>
+            <option class="bg-night-800" value="open" data-i18n="booking.s2.open">Можем обсудить</option>
+          </select>
+        </div>
+
+        <div class="form-step" data-step="3">
+          <h3 class="font-display text-2xl mb-6" data-i18n="booking.s3.title">Сколько вас будет?</h3>
+          <div class="grid grid-cols-2 gap-6">
+            <div>
+              <label class="block text-sm text-white/70 mb-2" data-i18n="booking.s3.adults">Взрослые</label>
+              <div class="flex items-center bg-white/10 border border-white/20 rounded-lg">
+                <button type="button" class="qty-btn px-4 py-3 text-xl" data-target="adults" data-op="-">−</button>
+                <input type="number" name="adults" value="2" min="1" class="flex-1 bg-transparent text-center text-white text-lg" readonly />
+                <button type="button" class="qty-btn px-4 py-3 text-xl" data-target="adults" data-op="+">+</button>
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm text-white/70 mb-2" data-i18n="booking.s3.children">Дети</label>
+              <div class="flex items-center bg-white/10 border border-white/20 rounded-lg">
+                <button type="button" class="qty-btn px-4 py-3 text-xl" data-target="children" data-op="-">−</button>
+                <input type="number" name="children" value="0" min="0" class="flex-1 bg-transparent text-center text-white text-lg" readonly />
+                <button type="button" class="qty-btn px-4 py-3 text-xl" data-target="children" data-op="+">+</button>
+              </div>
+            </div>
+          </div>
+          <label class="block text-sm text-white/70 mb-2 mt-5" data-i18n="booking.s3.notes">Особые пожелания (необязательно)</label>
+          <textarea name="notes" rows="3" data-i18n-placeholder="booking.s3.notesPh" placeholder="Уровень подготовки, диета, языковые предпочтения..." class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/40"></textarea>
+        </div>
+
+        <div class="form-step" data-step="4">
+          <h3 class="font-display text-2xl mb-6" data-i18n="booking.s4.title">Как с вами связаться?</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm text-white/70 mb-2" data-i18n="booking.s4.name">Имя *</label>
+              <input type="text" name="name" required data-i18n-placeholder="booking.s4.namePh" class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/40" placeholder="Как к вам обращаться" />
+            </div>
+            <div>
+              <label class="block text-sm text-white/70 mb-2" data-i18n="booking.s4.phone">Телефон / WhatsApp *</label>
+              <input type="tel" name="phone" required class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/40" placeholder="+7 (___) ___-__-__" />
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-sm text-white/70 mb-2" data-i18n="booking.s4.email">Email</label>
+              <input type="email" name="email" class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/40" placeholder="you@example.com" />
+            </div>
+          </div>
+
+          <div id="bookingSummary" class="bg-white/5 border border-accent/40 rounded-lg p-5 mt-6 text-sm"></div>
+
+          <label class="flex items-start gap-3 mt-5 text-sm text-white/70 cursor-pointer">
+            <input type="checkbox" required class="mt-1" />
+            <span data-i18n="booking.s4.agree">Согласен на обработку персональных данных и условия публичной оферты</span>
+          </label>
+        </div>
+
+        <div class="flex justify-between mt-8 pt-6 border-t border-white/10">
+          <button type="button" id="prevStep" class="px-6 py-3 rounded-full border border-white/20 text-white/70 hover:bg-white/10 transition" style="visibility:hidden;" data-i18n="booking.prev">← Назад</button>
+          <button type="button" id="nextStep" class="btn-primary px-8 py-3 rounded-full font-semibold ml-auto" data-i18n="booking.next">Далее →</button>
+          <button type="submit" id="submitBooking" class="btn-primary px-8 py-3 rounded-full font-semibold ml-auto" style="display:none;" data-i18n="booking.submit">Отправить заявку</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- ============== GALLERY ============== -->
+<section id="gallery" class="py-24 bg-sand-50">
+  <div class="max-w-7xl mx-auto px-6">
+    <div class="text-center mb-12" data-aos="fade-up">
+      <div class="text-accent text-sm uppercase tracking-widest mb-3" data-i18n="gallery.kicker">Кадры с туров</div>
+      <h2 class="font-display text-3xl sm:text-4xl md:text-6xl text-night-900 mb-4" data-i18n="gallery.title">Галерея</h2>
+      <p class="text-night-500" data-i18n="gallery.sub">Лучшее из того, что мы видели вместе.</p>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div class="gallery-item rounded-xl col-span-2 row-span-2 h-96" data-aos="zoom-in">
+        <img src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=900&q=80" alt="" class="w-full h-full object-cover" />
+      </div>
+      <div class="gallery-item rounded-xl h-48" data-aos="zoom-in" data-aos-delay="100">
+        <img src="https://images.unsplash.com/photo-1454496522488-7a8e488e8606?auto=format&fit=crop&w=600&q=80" alt="" class="w-full h-full object-cover" />
+      </div>
+      <div class="gallery-item rounded-xl h-48" data-aos="zoom-in" data-aos-delay="200">
+        <img src="https://images.unsplash.com/photo-1486870591958-9b9d0d1dda99?auto=format&fit=crop&w=600&q=80" alt="" class="w-full h-full object-cover" />
+      </div>
+      <div class="gallery-item rounded-xl h-48" data-aos="zoom-in" data-aos-delay="300">
+        <img src="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=600&q=80" alt="" class="w-full h-full object-cover" />
+      </div>
+      <div class="gallery-item rounded-xl h-48" data-aos="zoom-in" data-aos-delay="400">
+        <img src="https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=600&q=80" alt="" class="w-full h-full object-cover" />
+      </div>
+      <div class="gallery-item rounded-xl h-48" data-aos="zoom-in">
+        <img src="https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=600&q=80" alt="" class="w-full h-full object-cover" />
+      </div>
+      <div class="gallery-item rounded-xl h-48" data-aos="zoom-in" data-aos-delay="100">
+        <img src="https://images.unsplash.com/photo-1551632811-561732d1e306?auto=format&fit=crop&w=600&q=80" alt="" class="w-full h-full object-cover" />
+      </div>
+      <div class="gallery-item rounded-xl h-48" data-aos="zoom-in" data-aos-delay="200">
+        <img src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=600&q=80" alt="" class="w-full h-full object-cover" />
+      </div>
+      <div class="gallery-item rounded-xl h-48" data-aos="zoom-in" data-aos-delay="300">
+        <img src="https://images.unsplash.com/photo-1455156218388-5e61b526818b?auto=format&fit=crop&w=600&q=80" alt="" class="w-full h-full object-cover" />
+      </div>
+    </div>
+  </div>
+</section>
+
+<div id="lightbox" class="lightbox">
+  <button class="lightbox-close" onclick="closeLightbox()">×</button>
+  <img id="lightboxImg" src="" alt="" />
+</div>
+
+<!-- ============== REVIEWS ============== -->
+<section id="reviews" class="py-24 bg-white">
+  <div class="max-w-7xl mx-auto px-6">
+    <div class="text-center mb-12" data-aos="fade-up">
+      <div class="text-accent text-sm uppercase tracking-widest mb-3" data-i18n="reviews.kicker">Что говорят гости</div>
+      <h2 class="font-display text-3xl sm:text-4xl md:text-6xl text-night-900 mb-4" data-i18n="reviews.title">Отзывы</h2>
+      <div class="flex items-center justify-center gap-2 text-night-500">
+        <span class="stars text-xl">★★★★★</span>
+        <span class="font-semibold text-night-900">4.9</span>
+        <span data-i18n="reviews.sub">из 5 на основе 127 отзывов</span>
+      </div>
+    </div>
+
+    <div class="swiper reviewsSwiper" data-aos="fade-up">
+      <div class="swiper-wrapper" id="reviewsWrapper"></div>
+      <div class="swiper-pagination mt-8"></div>
+    </div>
+
+    <div class="flex justify-center gap-6 mt-12 flex-wrap" data-aos="fade-up">
+      <a href="#" class="flex items-center gap-3 px-6 py-3 border border-night-200 rounded-full hover:border-accent transition">
+        <span class="text-2xl">🟢</span>
+        <span class="text-sm font-semibold">TripAdvisor</span>
+      </a>
+      <a href="#" class="flex items-center gap-3 px-6 py-3 border border-night-200 rounded-full hover:border-accent transition">
+        <span class="text-2xl">⭐</span>
+        <span class="text-sm font-semibold">Google · 4.9</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ============== MAP ============== -->
+<section id="map" class="py-24 bg-sand-50">
+  <div class="max-w-7xl mx-auto px-6">
+    <div class="text-center mb-12" data-aos="fade-up">
+      <div class="text-accent text-sm uppercase tracking-widest mb-3" data-i18n="map.kicker">География</div>
+      <h2 class="font-display text-3xl sm:text-4xl md:text-6xl text-night-900 mb-4" data-i18n="map.title">Карта маршрутов</h2>
+      <p class="text-night-500 max-w-2xl mx-auto" data-i18n="map.sub">Вот где мы ходим. Нажмите на маркер, чтобы посмотреть подробности.</p>
+    </div>
+    <div id="routesMap" data-aos="fade-up"></div>
+  </div>
+</section>
+
+<!-- ============== BLOG ============== -->
+<section id="blog" class="py-24 bg-white">
+  <div class="max-w-7xl mx-auto px-6">
+    <div class="flex items-end justify-between mb-12 flex-wrap gap-4" data-aos="fade-up">
+      <div>
+        <div class="text-accent text-sm uppercase tracking-widest mb-3" data-i18n="blog.kicker">Заметки</div>
+        <h2 class="font-display text-3xl sm:text-4xl md:text-6xl text-night-900" data-i18n="blog.title">Блог</h2>
+      </div>
+      <a href="#" class="text-accent font-semibold hover:underline" data-i18n="blog.all">Все статьи →</a>
+    </div>
+
+    <div id="blogGrid" class="grid grid-cols-1 md:grid-cols-3 gap-8"></div>
+  </div>
+</section>
+
+<!-- ============== FAQ ============== -->
+<section id="faq" class="py-24 bg-night-900 text-white">
+  <div class="max-w-4xl mx-auto px-6">
+    <div class="text-center mb-12" data-aos="fade-up">
+      <div class="text-accent text-sm uppercase tracking-widest mb-3" data-i18n="faq.kicker">Частые вопросы</div>
+      <h2 class="font-display text-3xl sm:text-4xl md:text-6xl mb-4" data-i18n="faq.title">FAQ</h2>
+      <p class="text-white/60" data-i18n="faq.sub">Если ваш вопрос не здесь — напишите в WhatsApp или Telegram.</p>
+    </div>
+
+    <div class="space-y-3" id="faqList"></div>
+  </div>
+</section>
+
+<!-- ============== CONTACTS ============== -->
+<section id="contacts" class="py-24 bg-sand-50">
+  <div class="max-w-7xl mx-auto px-6">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
+      <div data-aos="fade-right">
+        <div class="text-accent text-sm uppercase tracking-widest mb-3" data-i18n="contacts.kicker">Связь</div>
+        <h2 class="font-display text-3xl sm:text-4xl md:text-6xl text-night-900 mb-6" data-i18n="contacts.title">Контакты</h2>
+        <p class="text-night-600 mb-10 leading-relaxed" data-i18n="contacts.sub">
+          Самый быстрый способ — мессенджеры. Обычно отвечаю в течение часа в рабочее время (9:00–21:00 по Москве).
+        </p>
+
+        <div class="space-y-4">
+          <a href="tel:+79991234567" class="flex items-center gap-4 p-5 bg-white rounded-2xl border border-night-100 hover:border-accent transition group">
+            <div class="w-12 h-12 rounded-full bg-accent/10 text-accent flex items-center justify-center text-xl group-hover:bg-accent group-hover:text-white transition">📞</div>
+            <div>
+              <div class="text-xs text-night-500 uppercase tracking-wider" data-i18n="contacts.phone">Телефон</div>
+              <div class="font-semibold text-night-900">+7 (999) 123-45-67</div>
+            </div>
+          </a>
+          <a href="https://wa.me/79991234567" class="flex items-center gap-4 p-5 bg-white rounded-2xl border border-night-100 hover:border-accent transition group">
+            <div class="w-12 h-12 rounded-full bg-accent/10 text-accent flex items-center justify-center text-xl group-hover:bg-accent group-hover:text-white transition">💬</div>
+            <div>
+              <div class="text-xs text-night-500 uppercase tracking-wider">WhatsApp</div>
+              <div class="font-semibold text-night-900">+7 (999) 123-45-67</div>
+            </div>
+          </a>
+          <a href="https://t.me/andrey_guide" class="flex items-center gap-4 p-5 bg-white rounded-2xl border border-night-100 hover:border-accent transition group">
+            <div class="w-12 h-12 rounded-full bg-accent/10 text-accent flex items-center justify-center text-xl group-hover:bg-accent group-hover:text-white transition">✈️</div>
+            <div>
+              <div class="text-xs text-night-500 uppercase tracking-wider">Telegram</div>
+              <div class="font-semibold text-night-900">@andrey_guide</div>
+            </div>
+          </a>
+          <a href="mailto:hello@andreyguide.com" class="flex items-center gap-4 p-5 bg-white rounded-2xl border border-night-100 hover:border-accent transition group">
+            <div class="w-12 h-12 rounded-full bg-accent/10 text-accent flex items-center justify-center text-xl group-hover:bg-accent group-hover:text-white transition">✉️</div>
+            <div>
+              <div class="text-xs text-night-500 uppercase tracking-wider" data-i18n="contacts.email">Email</div>
+              <div class="font-semibold text-night-900">hello@andreyguide.com</div>
+            </div>
+          </a>
+        </div>
+
+        <div class="flex gap-3 mt-8">
+          <a href="#" class="w-12 h-12 rounded-full bg-white border border-night-100 flex items-center justify-center hover:bg-accent hover:text-white hover:border-accent transition">IG</a>
+          <a href="#" class="w-12 h-12 rounded-full bg-white border border-night-100 flex items-center justify-center hover:bg-accent hover:text-white hover:border-accent transition">YT</a>
+          <a href="#" class="w-12 h-12 rounded-full bg-white border border-night-100 flex items-center justify-center hover:bg-accent hover:text-white hover:border-accent transition">VK</a>
+        </div>
+      </div>
+
+      <div data-aos="fade-left" class="bg-white rounded-2xl p-8 border border-night-100">
+        <h3 class="font-display text-2xl text-night-900 mb-2" data-i18n="contacts.quick.title">Быстрый вопрос</h3>
+        <p class="text-night-500 text-sm mb-6" data-i18n="contacts.quick.sub">Если вы пока не готовы бронировать, но хотите что-то уточнить.</p>
+        <form id="quickContact" class="space-y-4">
+          <input type="text" required data-i18n-placeholder="contacts.quick.name" placeholder="Ваше имя" class="w-full bg-sand-50 border border-night-100 rounded-lg px-4 py-3 focus:border-accent outline-none transition" />
+          <input type="text" required data-i18n-placeholder="contacts.quick.contact" placeholder="Телефон или Telegram" class="w-full bg-sand-50 border border-night-100 rounded-lg px-4 py-3 focus:border-accent outline-none transition" />
+          <textarea required rows="4" data-i18n-placeholder="contacts.quick.q" placeholder="Ваш вопрос" class="w-full bg-sand-50 border border-night-100 rounded-lg px-4 py-3 focus:border-accent outline-none transition"></textarea>
+          <button type="submit" class="btn-primary w-full py-4 rounded-full font-semibold" data-i18n="contacts.quick.send">Отправить</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============== FOOTER ============== -->
+<footer class="bg-night-900 text-white py-16">
+  <div class="max-w-7xl mx-auto px-6">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
+      <div>
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-11 h-11 rounded-full bg-accent flex items-center justify-center text-xl">▲</div>
+          <div>
+            <div class="font-display text-xl" data-i18n="brand">Андрей Гид</div>
+            <div class="text-white/50 text-xs uppercase tracking-wider" data-i18n="brandSub">авторские маршруты</div>
+          </div>
+        </div>
+        <p class="text-white/60 text-sm" data-i18n="footer.about">Авторские туры в горы и по городу. Лицензированный гид, опыт 10+ лет.</p>
+      </div>
+      <div>
+        <h4 class="font-semibold mb-4" data-i18n="footer.tours">Туры</h4>
+        <ul class="space-y-2 text-white/60 text-sm">
+          <li><a href="#tours" class="hover:text-accent" data-i18n="footer.tours.all">Все маршруты</a></li>
+          <li><a href="#tours" class="hover:text-accent" data-i18n="footer.tours.mountain">Горные туры</a></li>
+          <li><a href="#tours" class="hover:text-accent" data-i18n="footer.tours.city">Городские прогулки</a></li>
+          <li><a href="#tours" class="hover:text-accent" data-i18n="footer.tours.gastro">Гастро-туры</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="font-semibold mb-4" data-i18n="footer.info">Информация</h4>
+        <ul class="space-y-2 text-white/60 text-sm">
+          <li><a href="#about" class="hover:text-accent" data-i18n="nav.about">О гиде</a></li>
+          <li><a href="#reviews" class="hover:text-accent" data-i18n="nav.reviews">Отзывы</a></li>
+          <li><a href="#faq" class="hover:text-accent" data-i18n="nav.faq">FAQ</a></li>
+          <li><a href="#blog" class="hover:text-accent" data-i18n="nav.blog">Блог</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="font-semibold mb-4" data-i18n="footer.contacts">Связь</h4>
+        <ul class="space-y-2 text-white/60 text-sm">
+          <li>+7 (999) 123-45-67</li>
+          <li>hello@andreyguide.com</li>
+          <li>WhatsApp · Telegram</li>
+        </ul>
+      </div>
+    </div>
+    <div class="pt-8 border-t border-white/10 flex flex-wrap items-center justify-between gap-4 text-white/40 text-sm">
+      <div data-i18n="footer.copyright">© 2026 Андрей Гид. Все права защищены.</div>
+      <div class="flex gap-6">
+        <a href="#" class="hover:text-white" data-i18n="footer.legal1">Публичная оферта</a>
+        <a href="#" class="hover:text-white" data-i18n="footer.legal2">Политика конфиденциальности</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- ============== ADMIN ============== -->
+<button id="adminFab" class="admin-fab w-14 h-14 rounded-full bg-night-900 text-white shadow-2xl hover:bg-accent transition flex items-center justify-center" title="Admin">
+  <span class="text-xl">⚙</span>
+</button>
+
+<div id="adminPanel" class="admin-panel">
+  <div class="p-6 border-b border-night-100 flex items-center justify-between sticky top-0 bg-white z-10">
+    <div>
+      <div class="font-display text-2xl text-night-900" data-i18n="admin.title">Админ-панель</div>
+      <div class="text-night-500 text-sm" data-i18n="admin.sub">Управление контентом сайта</div>
+    </div>
+    <button id="closeAdmin" class="text-night-500 text-2xl">×</button>
+  </div>
+
+  <div id="adminLogin" class="p-6">
+    <p class="text-night-600 text-sm mb-4" data-i18n="admin.loginHint">Войдите, чтобы редактировать туры, отзывы и блог. <span class="text-accent">(demo · admin / admin)</span></p>
+    <input id="adminUser" type="text" data-i18n-placeholder="admin.user" placeholder="Логин" class="w-full border border-night-200 rounded-lg px-4 py-3 mb-3 focus:border-accent outline-none" />
+    <input id="adminPass" type="password" data-i18n-placeholder="admin.pass" placeholder="Пароль" class="w-full border border-night-200 rounded-lg px-4 py-3 mb-3 focus:border-accent outline-none" />
+    <button id="adminLoginBtn" class="btn-primary w-full py-3 rounded-full font-semibold" data-i18n="admin.login">Войти</button>
+  </div>
+
+  <div id="adminDashboard" class="hidden">
+    <div class="flex border-b border-night-100">
+      <button class="admin-tab flex-1 py-3 text-sm font-semibold border-b-2 border-accent text-accent" data-tab="tours" data-i18n="admin.tab.tours">Туры</button>
+      <button class="admin-tab flex-1 py-3 text-sm font-semibold border-b-2 border-transparent text-night-500" data-tab="reviews" data-i18n="admin.tab.reviews">Отзывы</button>
+      <button class="admin-tab flex-1 py-3 text-sm font-semibold border-b-2 border-transparent text-night-500" data-tab="blog" data-i18n="admin.tab.blog">Блог</button>
+      <button class="admin-tab flex-1 py-3 text-sm font-semibold border-b-2 border-transparent text-night-500" data-tab="texts" data-i18n="admin.tab.texts">Тексты</button>
+    </div>
+
+    <div class="admin-content p-6" data-content="tours">
+      <button id="addTourBtn" class="btn-primary w-full py-3 rounded-full font-semibold mb-4" data-i18n="admin.newTour">+ Новый тур</button>
+      <div id="adminToursList" class="space-y-3"></div>
+    </div>
+    <div class="admin-content p-6 hidden" data-content="reviews">
+      <button id="addReviewBtn" class="btn-primary w-full py-3 rounded-full font-semibold mb-4" data-i18n="admin.newReview">+ Новый отзыв</button>
+      <div id="adminReviewsList" class="space-y-3"></div>
+    </div>
+    <div class="admin-content p-6 hidden" data-content="blog">
+      <button id="addPostBtn" class="btn-primary w-full py-3 rounded-full font-semibold mb-4" data-i18n="admin.newPost">+ Новая статья</button>
+      <div id="adminBlogList" class="space-y-3"></div>
+    </div>
+    <div class="admin-content p-6 hidden" data-content="texts">
+      <p class="text-night-500 text-sm mb-4" data-i18n="admin.texts.hint">Здесь можно отредактировать тексты ключевых блоков.</p>
+      <label class="block text-sm font-semibold text-night-700 mb-2" data-i18n="admin.texts.heroTitle">Заголовок hero</label>
+      <input id="textHero" class="w-full border border-night-200 rounded-lg px-4 py-3 mb-4" />
+      <label class="block text-sm font-semibold text-night-700 mb-2" data-i18n="admin.texts.heroSub">Подзаголовок hero</label>
+      <textarea id="textHeroSub" rows="3" class="w-full border border-night-200 rounded-lg px-4 py-3 mb-4"></textarea>
+      <button id="saveTexts" class="btn-primary w-full py-3 rounded-full font-semibold" data-i18n="admin.save">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<div id="editModal" class="fixed inset-0 bg-black/60 z-[95] hidden items-center justify-center p-4">
+  <div class="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+    <div class="p-6 border-b border-night-100 flex justify-between items-center sticky top-0 bg-white">
+      <h3 id="editModalTitle" class="font-display text-xl text-night-900">Edit</h3>
+      <button id="closeEditModal" class="text-2xl text-night-500">×</button>
+    </div>
+    <div id="editModalBody" class="p-6"></div>
+  </div>
+</div>
+
+<!-- ============== TOUR DETAIL MODAL ============== -->
+<div id="tourDetail" class="tour-detail-modal">
+  <div class="tour-detail-content" id="tourDetailContent"></div>
+</div>
+
+<!-- Scripts -->
+<script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+/* =========================================
+   I18N DICTIONARY
+   ========================================= */
+const I18N = {
+  ru: {
+    brand: 'Андрей Гид',  brandSub: 'авторские маршруты',
+    'nav.tours':'Туры','nav.about':'О гиде','nav.gallery':'Галерея','nav.reviews':'Отзывы',
+    'nav.map':'Маршруты','nav.blog':'Блог','nav.faq':'FAQ','nav.contacts':'Контакты','nav.book':'Забронировать',
+    'hero.badge':'Лицензированный гид · 10+ лет опыта',
+    'hero.title1':'Авторские туры','hero.title2':'в твой ритм',
+    'hero.sub':'Индивидуальные и групповые маршруты в горы, по городу и за горизонт. Покажу вам то, что не найти в путеводителях — местечки, истории и виды, ради которых стоит приехать.',
+    'hero.btn1':'Посмотреть туры','hero.btn2':'Оставить заявку',
+    'hero.stat1':'довольных гостей','hero.stat2':'маршрута','hero.stat3':'из 5 на TripAdvisor',
+    'hero.scroll':'Вниз',
+    'tours.kicker':'Что я предлагаю','tours.title':'Туры и маршруты',
+    'tours.sub':'Каждый маршрут продуман до мелочей. Вы можете выбрать готовую программу или собрать тур под себя.',
+    'tours.f.all':'Все туры','tours.f.mountain':'Горы','tours.f.city':'Город','tours.f.trek':'Треккинг','tours.f.gastro':'Гастрономия',
+    'tours.cta':'Не нашли подходящего? Обсудим индивидуальный маршрут →',
+    'tours.book':'Забронировать','tours.details':'Подробнее',
+    'about.kicker':'О гиде',
+    'about.title':'Андрей.<br/>Гид, фотограф, рассказчик.',
+    'about.p1':'Привет! Я Андрей. Уже больше десяти лет вожу путешественников по своим любимым маршрутам — от рассветных троп в горах до уютных кофеен старого города. Каждый тур для меня — это не просто прогулка, а возможность поделиться местом, которое люблю.',
+    'about.p2':'У меня есть лицензия гида-проводника, сертификаты по горной подготовке и базовой медицине. Веду экскурсии на двух языках, но главное — стараюсь, чтобы каждому было комфортно: и тем, кто впервые в горах, и тем, кто уже опытный путешественник.',
+    'about.license':'Лицензия гида','about.licenseSub':'с 2014 года',
+    'about.langs':'2 языка',
+    'about.certs':'Сертификация','about.certsSub':'Первая помощь, горная подготовка',
+    'about.photo':'Фотограф','about.photoSub':'Сделаю кадры в подарок',
+    'about.cta':'Поехали со мной','about.exp':'лет провожу туры в этих местах',
+    'booking.kicker':'Бронирование','booking.title':'Оставьте заявку',
+    'booking.sub':'Заполните форму — я свяжусь в течение часа в рабочее время. Предоплата не требуется.',
+    'booking.step1':'Тур','booking.step2':'Дата','booking.step3':'Гости','booking.step4':'Контакты',
+    'booking.s1.title':'Выберите тур','booking.s2.title':'Когда удобно?',
+    'booking.s2.date':'Желаемая дата','booking.s2.flex':'Гибкость по датам',
+    'booking.s2.exact':'Только эта дата','booking.s2.3days':'± 3 дня','booking.s2.week':'Эта неделя','booking.s2.open':'Можем обсудить',
+    'booking.s3.title':'Сколько вас будет?','booking.s3.adults':'Взрослые','booking.s3.children':'Дети',
+    'booking.s3.notes':'Особые пожелания (необязательно)','booking.s3.notesPh':'Уровень подготовки, диета, языковые предпочтения...',
+    'booking.s4.title':'Как с вами связаться?','booking.s4.name':'Имя *','booking.s4.namePh':'Как к вам обращаться',
+    'booking.s4.phone':'Телефон / WhatsApp *','booking.s4.email':'Email',
+    'booking.s4.agree':'Согласен на обработку персональных данных и условия публичной оферты',
+    'booking.prev':'← Назад','booking.next':'Далее →','booking.submit':'Отправить заявку',
+    'booking.summary.title':'Сводка заявки','booking.summary.tour':'Тур','booking.summary.notSelected':'не выбран',
+    'booking.summary.date':'Дата','booking.summary.guests':'Гости','booking.summary.adults':'взр.','booking.summary.children':'дет.','booking.summary.notes':'Пожелания',
+    'booking.selectTour':'Пожалуйста, выберите тур','booking.selectDate':'Укажите желаемую дату',
+    'booking.sent':'Спасибо! Ваша заявка отправлена. Я свяжусь в течение часа.',
+    'gallery.kicker':'Кадры с туров','gallery.title':'Галерея','gallery.sub':'Лучшее из того, что мы видели вместе.',
+    'reviews.kicker':'Что говорят гости','reviews.title':'Отзывы','reviews.sub':'из 5 на основе 127 отзывов',
+    'map.kicker':'География','map.title':'Карта маршрутов','map.sub':'Вот где мы ходим. Нажмите на маркер, чтобы посмотреть подробности.',
+    'blog.kicker':'Заметки','blog.title':'Блог','blog.all':'Все статьи →','blog.read':'Читать →',
+    'faq.kicker':'Частые вопросы','faq.title':'FAQ','faq.sub':'Если ваш вопрос не здесь — напишите в WhatsApp или Telegram.',
+    'contacts.kicker':'Связь','contacts.title':'Контакты',
+    'contacts.sub':'Самый быстрый способ — мессенджеры. Обычно отвечаю в течение часа в рабочее время (9:00–21:00 по Москве).',
+    'contacts.phone':'Телефон','contacts.email':'Email',
+    'contacts.quick.title':'Быстрый вопрос','contacts.quick.sub':'Если вы пока не готовы бронировать, но хотите что-то уточнить.',
+    'contacts.quick.name':'Ваше имя','contacts.quick.contact':'Телефон или Telegram','contacts.quick.q':'Ваш вопрос','contacts.quick.send':'Отправить',
+    'contacts.quick.sent':'Спасибо! Я отвечу в течение часа.',
+    'footer.about':'Авторские туры в горы и по городу. Лицензированный гид, опыт 10+ лет.',
+    'footer.tours':'Туры','footer.tours.all':'Все маршруты','footer.tours.mountain':'Горные туры',
+    'footer.tours.city':'Городские прогулки','footer.tours.gastro':'Гастро-туры',
+    'footer.info':'Информация','footer.contacts':'Связь',
+    'footer.copyright':'© 2026 Андрей Гид. Все права защищены.',
+    'footer.legal1':'Публичная оферта','footer.legal2':'Политика конфиденциальности',
+    'admin.title':'Админ-панель','admin.sub':'Управление контентом сайта',
+    'admin.loginHint':'Войдите, чтобы редактировать туры, отзывы и блог. <span class="text-accent">(demo · admin / admin)</span>',
+    'admin.user':'Логин','admin.pass':'Пароль','admin.login':'Войти',
+    'admin.tab.tours':'Туры','admin.tab.reviews':'Отзывы','admin.tab.blog':'Блог','admin.tab.texts':'Тексты',
+    'admin.newTour':'+ Новый тур','admin.newReview':'+ Новый отзыв','admin.newPost':'+ Новая статья',
+    'admin.texts.hint':'Здесь можно отредактировать тексты ключевых блоков.',
+    'admin.texts.heroTitle':'Заголовок hero','admin.texts.heroSub':'Подзаголовок hero','admin.save':'Сохранить',
+    'admin.wrongPass':'Неверный логин или пароль (demo: admin / admin)',
+    'admin.delTour':'Удалить тур?','admin.delReview':'Удалить отзыв?','admin.delPost':'Удалить статью?',
+    /* Tour detail */
+    'td.about':'О туре','td.program':'Программа по дням','td.included':'Что включено',
+    'td.excluded':'Что не включено','td.meeting':'Место встречи',
+    'td.duration':'Длительность','td.level':'Сложность','td.group':'Размер группы','td.price':'Стоимость',
+    'td.book':'Забронировать этот тур','td.close':'Закрыть',
+    'td.day':'День'
+  },
+  en: {
+    brand:'Andrey Guide', brandSub:'private mountain tours',
+    'nav.tours':'Tours','nav.about':'About','nav.gallery':'Gallery','nav.reviews':'Reviews',
+    'nav.map':'Routes','nav.blog':'Blog','nav.faq':'FAQ','nav.contacts':'Contacts','nav.book':'Book a tour',
+    'hero.badge':'Licensed guide · 10+ years of experience',
+    'hero.title1':'Private tours','hero.title2':'at your pace',
+    'hero.sub':'Individual and small-group routes in the mountains, around the city and beyond. I\'ll show you the places, stories and views you won\'t find in any guidebook.',
+    'hero.btn1':'See the tours','hero.btn2':'Send request',
+    'hero.stat1':'happy guests','hero.stat2':'routes','hero.stat3':'of 5 on TripAdvisor',
+    'hero.scroll':'Scroll',
+    'tours.kicker':'What I offer','tours.title':'Tours & routes',
+    'tours.sub':'Every route is thought out to the smallest detail. Choose a ready-made program or design a tour just for you.',
+    'tours.f.all':'All tours','tours.f.mountain':'Mountains','tours.f.city':'City','tours.f.trek':'Trekking','tours.f.gastro':'Gastronomy',
+    'tours.cta':'Didn\'t find the right one? Let\'s design a custom tour →',
+    'tours.book':'Book','tours.details':'Details',
+    'about.kicker':'About me',
+    'about.title':'Andrey.<br/>Guide, photographer, storyteller.',
+    'about.p1':'Hi! I\'m Andrey. For more than ten years I\'ve been leading travellers along my favourite routes — from sunrise mountain trails to cozy old-town cafés. For me, every tour is more than a walk: it\'s a chance to share a place I love.',
+    'about.p2':'I hold a professional guide license, certifications in mountain rescue and first aid. I run tours in two languages, but most importantly — I make sure everyone feels comfortable, whether it\'s your first time in the mountains or you\'re a seasoned traveller.',
+    'about.license':'Guide license','about.licenseSub':'since 2014',
+    'about.langs':'2 languages',
+    'about.certs':'Certified','about.certsSub':'First aid, alpine training',
+    'about.photo':'Photographer','about.photoSub':'I\'ll take photos for you',
+    'about.cta':'Let\'s go together','about.exp':'years leading tours here',
+    'booking.kicker':'Booking','booking.title':'Send a request',
+    'booking.sub':'Fill in the form — I\'ll get back to you within an hour during work hours. No prepayment required.',
+    'booking.step1':'Tour','booking.step2':'Date','booking.step3':'Guests','booking.step4':'Contact',
+    'booking.s1.title':'Choose a tour','booking.s2.title':'When works for you?',
+    'booking.s2.date':'Preferred date','booking.s2.flex':'Date flexibility',
+    'booking.s2.exact':'This date only','booking.s2.3days':'± 3 days','booking.s2.week':'This week','booking.s2.open':'We can discuss',
+    'booking.s3.title':'How many of you?','booking.s3.adults':'Adults','booking.s3.children':'Children',
+    'booking.s3.notes':'Special requests (optional)','booking.s3.notesPh':'Fitness level, diet, language preferences...',
+    'booking.s4.title':'How can I reach you?','booking.s4.name':'Name *','booking.s4.namePh':'What should I call you',
+    'booking.s4.phone':'Phone / WhatsApp *','booking.s4.email':'Email',
+    'booking.s4.agree':'I agree to the processing of personal data and the public offer',
+    'booking.prev':'← Back','booking.next':'Next →','booking.submit':'Send request',
+    'booking.summary.title':'Booking summary','booking.summary.tour':'Tour','booking.summary.notSelected':'not selected',
+    'booking.summary.date':'Date','booking.summary.guests':'Guests','booking.summary.adults':'adults','booking.summary.children':'children','booking.summary.notes':'Notes',
+    'booking.selectTour':'Please select a tour','booking.selectDate':'Please pick a date',
+    'booking.sent':'Thank you! Your request has been sent. I\'ll be in touch within an hour.',
+    'gallery.kicker':'Tour photos','gallery.title':'Gallery','gallery.sub':'The best moments from our journeys.',
+    'reviews.kicker':'What guests say','reviews.title':'Reviews','reviews.sub':'of 5 based on 127 reviews',
+    'map.kicker':'Geography','map.title':'Route map','map.sub':'These are the places we go. Click a pin to see details.',
+    'blog.kicker':'Notes','blog.title':'Blog','blog.all':'All articles →','blog.read':'Read →',
+    'faq.kicker':'Common questions','faq.title':'FAQ','faq.sub':'If your question isn\'t here — drop me a line on WhatsApp or Telegram.',
+    'contacts.kicker':'Reach out','contacts.title':'Contacts',
+    'contacts.sub':'Messengers are the fastest way to reach me. I usually reply within an hour during work hours (9 AM – 9 PM Moscow time).',
+    'contacts.phone':'Phone','contacts.email':'Email',
+    'contacts.quick.title':'Quick question','contacts.quick.sub':'If you\'re not ready to book yet but want to clarify something.',
+    'contacts.quick.name':'Your name','contacts.quick.contact':'Phone or Telegram','contacts.quick.q':'Your question','contacts.quick.send':'Send',
+    'contacts.quick.sent':'Thanks! I\'ll reply within an hour.',
+    'footer.about':'Private tours in the mountains and around the city. Licensed guide, 10+ years of experience.',
+    'footer.tours':'Tours','footer.tours.all':'All routes','footer.tours.mountain':'Mountain tours',
+    'footer.tours.city':'City walks','footer.tours.gastro':'Food tours',
+    'footer.info':'Info','footer.contacts':'Contacts',
+    'footer.copyright':'© 2026 Andrey Guide. All rights reserved.',
+    'footer.legal1':'Public offer','footer.legal2':'Privacy policy',
+    'admin.title':'Admin panel','admin.sub':'Manage website content',
+    'admin.loginHint':'Log in to edit tours, reviews and blog posts. <span class="text-accent">(demo · admin / admin)</span>',
+    'admin.user':'Username','admin.pass':'Password','admin.login':'Sign in',
+    'admin.tab.tours':'Tours','admin.tab.reviews':'Reviews','admin.tab.blog':'Blog','admin.tab.texts':'Texts',
+    'admin.newTour':'+ New tour','admin.newReview':'+ New review','admin.newPost':'+ New article',
+    'admin.texts.hint':'Edit text content of key sections here.',
+    'admin.texts.heroTitle':'Hero title','admin.texts.heroSub':'Hero subtitle','admin.save':'Save',
+    'admin.wrongPass':'Wrong username or password (demo: admin / admin)',
+    'admin.delTour':'Delete this tour?','admin.delReview':'Delete this review?','admin.delPost':'Delete this article?',
+    'td.about':'About the tour','td.program':'Day-by-day program','td.included':'What\'s included',
+    'td.excluded':'What\'s not included','td.meeting':'Meeting point',
+    'td.duration':'Duration','td.level':'Difficulty','td.group':'Group size','td.price':'Price',
+    'td.book':'Book this tour','td.close':'Close','td.day':'Day'
+  }
+};
+
+let currentLang = localStorage.getItem('guide_lang') || 'ru';
+let currentFilter = 'all';
+
+function t(key) { return (I18N[currentLang] && I18N[currentLang][key]) || I18N.ru[key] || key; }
+
+function applyTranslations() {
+  document.documentElement.lang = currentLang;
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const k = el.dataset.i18n;
+    if (I18N[currentLang][k] !== undefined) el.innerHTML = I18N[currentLang][k];
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const k = el.dataset.i18nPlaceholder;
+    if (I18N[currentLang][k] !== undefined) el.placeholder = I18N[currentLang][k];
+  });
+  document.querySelectorAll('.lang-btn').forEach(b => {
+    b.classList.toggle('lang-active', b.dataset.lang === currentLang);
+  });
+}
+
+function setLang(lang) {
+  currentLang = lang;
+  localStorage.setItem('guide_lang', lang);
+  applyTranslations();
+  renderTours(currentFilter);
+  renderBookingTours();
+  renderReviews();
+  renderBlog();
+  renderFaq();
+  renderRoutes();
+}
+
+/* =========================================
+   DATA (with RU/EN content)
+   ========================================= */
+const DEFAULT_TOURS = [
+  {
+    id:1, cat:'mountain',
+    img:'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=80',
+    price:{ ru:'от 65 000 ₽', en:'from $750' },
+    photos: [
+      'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=900&q=80',
+      'https://images.unsplash.com/photo-1454496522488-7a8e488e8606?auto=format&fit=crop&w=900&q=80',
+      'https://images.unsplash.com/photo-1486870591958-9b9d0d1dda99?auto=format&fit=crop&w=900&q=80'
+    ],
+    ru: {
+      title:'Восхождение на Эльбрус', subtitle:'Классический маршрут с юга',
+      desc:'7 дней, акклиматизация и восхождение на высшую точку Европы. Группа до 8 человек.',
+      fullDesc:'Полноценная программа восхождения на западную вершину Эльбруса (5642 м). Начинаем с поляны Азау, постепенно набираем высоту, делаем акклиматизационные выходы на скалы Пастухова. На штурм выходим ночью, чтобы встретить рассвет на высшей точке Европы.',
+      duration:'7 дней', level:'Высокий', group:'до 8 чел.',
+      itinerary: [
+        { day:'1', title:'Встреча и переезд в Терскол', desc:'Прилёт в Минеральные Воды, трансфер в посёлок Терскол (2100 м). Знакомство, осмотр снаряжения.' },
+        { day:'2-3', title:'Акклиматизация', desc:'Радиальные выходы на обсерваторию (3050 м) и пик Терскол (3127 м).' },
+        { day:'4', title:'Подъём на «Бочки»', desc:'Канатной дорогой до 3800 м. Размещение в горном приюте.' },
+        { day:'5', title:'Тренировочный выход', desc:'Подъём на скалы Пастухова (4700 м), отработка техники.' },
+        { day:'6', title:'Штурм вершины', desc:'Выход в 2 часа ночи. Подъём на западную вершину (5642 м), спуск в приют.' },
+        { day:'7', title:'Спуск и отъезд', desc:'Спуск на Поляну Азау, праздничный ужин, трансфер в аэропорт.' }
+      ],
+      includes:['Услуги гида и помощников','Проживание в гостинице и приюте','Все трансферы','Питание на всей программе','Прокат базового снаряжения','Страховка от несчастного случая'],
+      excludes:['Авиабилеты','Личное снаряжение (ботинки, кошки)','Алкоголь и доп. напитки','Сувениры','Подъёмники сверх программы'],
+      meeting:'Аэропорт Минеральные Воды (MRV), терминал внутренних рейсов'
+    },
+    en: {
+      title:'Mt. Elbrus Ascent', subtitle:'Classic southern route',
+      desc:'7 days, acclimatization and ascent of Europe\'s highest peak. Group up to 8 people.',
+      fullDesc:'A full ascent program to the West Summit of Mt. Elbrus (5642 m / 18 510 ft). We start in Azau valley, gradually gain altitude with acclimatization hikes to Pastukhov Rocks, then summit at night to catch sunrise on the roof of Europe.',
+      duration:'7 days', level:'High', group:'up to 8',
+      itinerary: [
+        { day:'1', title:'Arrival and transfer to Terskol', desc:'Fly into Mineralnye Vody, transfer to Terskol (2100 m). Briefing and gear check.' },
+        { day:'2-3', title:'Acclimatization', desc:'Day hikes to the observatory (3050 m) and Terskol peak (3127 m).' },
+        { day:'4', title:'Move up to "Barrels" huts', desc:'Cable car to 3800 m. Settle in mountain shelter.' },
+        { day:'5', title:'Training day', desc:'Climb to Pastukhov Rocks (4700 m), practice crampon and ice axe technique.' },
+        { day:'6', title:'Summit day', desc:'Start at 2 AM. Ascent of the West Summit (5642 m), descent to the shelter.' },
+        { day:'7', title:'Descent and departure', desc:'Descent to Azau, celebration dinner, transfer to the airport.' }
+      ],
+      includes:['Guide and assistant fees','Hotel and mountain hut','All transfers','Full meal plan','Basic gear rental','Accident insurance'],
+      excludes:['Flights','Personal gear (boots, crampons)','Alcohol and extra drinks','Souvenirs','Extra cable car rides'],
+      meeting:'Mineralnye Vody Airport (MRV), domestic terminal'
+    }
+  },
+  {
+    id:2, cat:'trek',
+    img:'https://images.unsplash.com/photo-1454496522488-7a8e488e8606?auto=format&fit=crop&w=1200&q=80',
+    price:{ ru:'от 38 000 ₽', en:'from $420' },
+    photos: [
+      'https://images.unsplash.com/photo-1454496522488-7a8e488e8606?auto=format&fit=crop&w=900&q=80',
+      'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=900&q=80',
+      'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=900&q=80'
+    ],
+    ru: {
+      title:'Долина Семи Озёр', subtitle:'Многодневный треккинг',
+      desc:'5 дней по альпийским лугам, перевалам и горным озёрам. Палаточный лагерь.',
+      fullDesc:'Лучший маршрут для тех, кто хочет настоящих гор без альпинизма. Идём по тропам, ночуем в палатках у горных озёр, готовим на костре, рассматриваем звёзды без светового загрязнения.',
+      duration:'5 дней', level:'Средний', group:'до 10 чел.',
+      itinerary: [
+        { day:'1', title:'Заезд и первый переход', desc:'Трансфер до начала тропы, лёгкий переход 4 часа к первому озеру.' },
+        { day:'2', title:'Радиальный выход', desc:'Налегке поднимаемся на перевал с видом на хребет.' },
+        { day:'3', title:'Долина озёр', desc:'Переход к долине семи озёр, купание (для смелых) и отдых.' },
+        { day:'4', title:'Возвращение через перевал', desc:'Самый красивый день — высокий перевал с видами на 360°.' },
+        { day:'5', title:'Спуск и отъезд', desc:'Спуск к точке заброски, обед в кафе, трансфер обратно.' }
+      ],
+      includes:['Услуги гида','Питание в горах','Палатки и групповое снаряжение','Трансферы','Страховка'],
+      excludes:['Личный спальник и коврик','Алкоголь','Сувениры'],
+      meeting:'Аэропорт Минеральные Воды или Нальчик (по договорённости)'
+    },
+    en: {
+      title:'Valley of Seven Lakes', subtitle:'Multi-day trekking',
+      desc:'5 days across alpine meadows, mountain passes and lakes. Tent camping.',
+      fullDesc:'The best route for those who want real mountains without alpinism. We hike trails, sleep in tents by mountain lakes, cook on campfire, and watch stars without light pollution.',
+      duration:'5 days', level:'Moderate', group:'up to 10',
+      itinerary: [
+        { day:'1', title:'Arrival and first hike', desc:'Transfer to the trailhead, easy 4-hour hike to the first lake.' },
+        { day:'2', title:'Day hike to the pass', desc:'Light pack — climb to a pass with views of the main ridge.' },
+        { day:'3', title:'Lake valley', desc:'Trek to the valley of seven lakes, swim (if you\'re brave), rest.' },
+        { day:'4', title:'Return via high pass', desc:'The most beautiful day — a high pass with 360° views.' },
+        { day:'5', title:'Descent and departure', desc:'Descent to pickup point, lunch in a cafe, transfer back.' }
+      ],
+      includes:['Guide fees','Meals on the trail','Tents and group gear','Transfers','Insurance'],
+      excludes:['Personal sleeping bag and pad','Alcohol','Souvenirs'],
+      meeting:'Mineralnye Vody or Nalchik airport (TBA)'
+    }
+  },
+  {
+    id:3, cat:'city',
+    img:'https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=1200&q=80',
+    price:{ ru:'от 8 500 ₽', en:'from $95' },
+    photos: [
+      'https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=900&q=80',
+      'https://images.unsplash.com/photo-1547595628-c61a29f496f0?auto=format&fit=crop&w=900&q=80',
+      'https://images.unsplash.com/photo-1455156218388-5e61b526818b?auto=format&fit=crop&w=900&q=80'
+    ],
+    ru: {
+      title:'Гастрономический Тбилиси', subtitle:'Старый город и хинкальные',
+      desc:'Однодневный тур по семейным винодельням и легендарным духанам. Дегустации включены.',
+      fullDesc:'Лучшие места грузинской кухни глазами местного: куда грузины ходят сами. Никаких туристических ловушек — только семейные духаны, пекарни тоне, старые винные погреба.',
+      duration:'8 часов', level:'Лёгкий', group:'до 6 чел.',
+      itinerary: [
+        { day:'1', title:'Старый Тбилиси и завтрак', desc:'Прогулка по серным баням, завтрак с хачапури по-аджарски.' },
+        { day:'1', title:'Рынок Дезертирский', desc:'Знакомство со специями, сырами, домашним вином.' },
+        { day:'1', title:'Обед в семейном духане', desc:'Хинкали, мцвади, домашние соусы.' },
+        { day:'1', title:'Винный погреб', desc:'Дегустация 5 сортов грузинского вина с сомелье.' }
+      ],
+      includes:['Все дегустации','Завтрак и обед','Услуги гида-сомелье','Трансфер по городу'],
+      excludes:['Доп. покупки','Чаевые'],
+      meeting:'Ваш отель или станция метро «Площадь Свободы»'
+    },
+    en: {
+      title:'Tbilisi Food Tour', subtitle:'Old town and family taverns',
+      desc:'One-day tour of family wineries and legendary taverns. Tastings included.',
+      fullDesc:'The best Georgian cuisine seen through local eyes — places where Georgians actually eat. No tourist traps: just family-run taverns, traditional tone bakeries and old wine cellars.',
+      duration:'8 hours', level:'Easy', group:'up to 6',
+      itinerary: [
+        { day:'1', title:'Old Tbilisi & breakfast', desc:'Walk through the sulfur baths quarter, breakfast with Adjarian khachapuri.' },
+        { day:'1', title:'Dezertirka market', desc:'Spices, cheeses and homemade wine.' },
+        { day:'1', title:'Lunch in a family tavern', desc:'Khinkali, mtsvadi, homemade sauces.' },
+        { day:'1', title:'Wine cellar', desc:'Tasting of 5 Georgian wines with a sommelier.' }
+      ],
+      includes:['All tastings','Breakfast and lunch','Sommelier-guide fees','In-city transfer'],
+      excludes:['Extra purchases','Tips'],
+      meeting:'Your hotel or Freedom Square metro station'
+    }
+  },
+  {
+    id:4, cat:'mountain',
+    img:'https://images.unsplash.com/photo-1486870591958-9b9d0d1dda99?auto=format&fit=crop&w=1200&q=80',
+    price:{ ru:'от 4 500 ₽', en:'from $50' },
+    photos: [
+      'https://images.unsplash.com/photo-1486870591958-9b9d0d1dda99?auto=format&fit=crop&w=900&q=80',
+      'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=900&q=80'
+    ],
+    ru: {
+      title:'Закат на Чегете', subtitle:'Лёгкий маршрут на полдня',
+      desc:'Подъём на канатке + лёгкий треккинг. Идеально для первого опыта в горах.',
+      fullDesc:'Идеальный вариант, если у вас всего один день в Приэльбрусье. Поднимаемся на канатке на 3050 м, потом 1.5 часа пешком к смотровой площадке. Возвращаемся вечером, чтобы поймать закат.',
+      duration:'5 часов', level:'Лёгкий', group:'до 12 чел.',
+      itinerary: [
+        { day:'1', title:'Канатная дорога', desc:'Подъём на 3050 м, лёгкая адаптация.' },
+        { day:'1', title:'Треккинг к смотровой', desc:'1.5 часа в одну сторону по широкой тропе.' },
+        { day:'1', title:'Закат и спуск', desc:'Фотографируем закат, спускаемся на канатке.' }
+      ],
+      includes:['Услуги гида','Билет на канатку','Лёгкий перекус'],
+      excludes:['Трансфер до Чегета','Обед'],
+      meeting:'Парковка нижней станции канатной дороги Чегет'
+    },
+    en: {
+      title:'Sunset at Mt. Cheget', subtitle:'Easy half-day hike',
+      desc:'Cable car ride + easy trek. Perfect for your first day in the mountains.',
+      fullDesc:'Perfect option if you only have one day in the Elbrus region. We take a cable car up to 3050 m, then a 1.5-hour walk to a viewpoint. We come back in the evening to catch the sunset.',
+      duration:'5 hours', level:'Easy', group:'up to 12',
+      itinerary: [
+        { day:'1', title:'Cable car ride', desc:'Up to 3050 m, light altitude adaptation.' },
+        { day:'1', title:'Trek to the viewpoint', desc:'1.5 hours one way on a wide trail.' },
+        { day:'1', title:'Sunset and descent', desc:'Photograph the sunset, descend by cable car.' }
+      ],
+      includes:['Guide fees','Cable car ticket','Light snack'],
+      excludes:['Transfer to Cheget','Lunch'],
+      meeting:'Cheget lower cable car parking lot'
+    }
+  },
+  {
+    id:5, cat:'trek',
+    img:'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=1200&q=80',
+    price:{ ru:'от 14 000 ₽', en:'from $160' },
+    photos: [
+      'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=900&q=80',
+      'https://images.unsplash.com/photo-1454496522488-7a8e488e8606?auto=format&fit=crop&w=900&q=80'
+    ],
+    ru: {
+      title:'Кавказский хребет', subtitle:'Поход с ночёвкой',
+      desc:'2 дня, ночёвка в палатке у горного озера. Готовим на костре, рассказываю байки.',
+      fullDesc:'Короткий двухдневный поход для тех, кто хочет почувствовать настоящие горы за выходные. Ночуем у альпийского озера, готовим ужин на костре.',
+      duration:'2 дня', level:'Средний', group:'до 8 чел.',
+      itinerary: [
+        { day:'1', title:'Подъём к озеру', desc:'5-6 часов в гору, разбивка лагеря, ужин у костра.' },
+        { day:'2', title:'Рассвет и спуск', desc:'Раннее утро, фото у озера, спуск к точке заброски.' }
+      ],
+      includes:['Гид','Палатки и общее снаряжение','Питание','Трансферы'],
+      excludes:['Спальник и коврик (можем дать в аренду)','Алкоголь'],
+      meeting:'Согласовывается за неделю до выезда'
+    },
+    en: {
+      title:'Caucasus Ridge', subtitle:'Overnight hike',
+      desc:'2 days, tent camping by a mountain lake. Campfire cooking, stories around the fire.',
+      fullDesc:'A short two-day hike for those who want to feel real mountains over a weekend. We sleep by an alpine lake and cook dinner over a campfire.',
+      duration:'2 days', level:'Moderate', group:'up to 8',
+      itinerary: [
+        { day:'1', title:'Climb to the lake', desc:'5-6 hours uphill, set up camp, campfire dinner.' },
+        { day:'2', title:'Sunrise and descent', desc:'Early morning photos by the lake, descent to pickup.' }
+      ],
+      includes:['Guide','Tents and shared gear','Meals','Transfers'],
+      excludes:['Sleeping bag and pad (rental available)','Alcohol'],
+      meeting:'Confirmed one week before departure'
+    }
+  },
+  {
+    id:6, cat:'gastro',
+    img:'https://images.unsplash.com/photo-1547595628-c61a29f496f0?auto=format&fit=crop&w=1200&q=80',
+    price:{ ru:'от 22 000 ₽', en:'from $250' },
+    photos: [
+      'https://images.unsplash.com/photo-1547595628-c61a29f496f0?auto=format&fit=crop&w=900&q=80',
+      'https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=900&q=80'
+    ],
+    ru: {
+      title:'Винные подвалы Кахетии', subtitle:'Тур выходного дня',
+      desc:'Дегустации в 3 семейных винодельнях, ужин с грузинской семьёй, ночёвка в гестхаусе.',
+      fullDesc:'Уикенд в винной столице Грузии. Три семейные винодельни, традиционный ужин с местной семьёй (супра), ночёвка в уютном гестхаусе с видом на виноградники.',
+      duration:'2 дня', level:'Лёгкий', group:'до 6 чел.',
+      itinerary: [
+        { day:'1', title:'Дорога в Кахетию', desc:'Выезд утром, по дороге — монастырь и обзорная точка.' },
+        { day:'1', title:'Две винодельни и ужин', desc:'Дегустации и большой грузинский ужин с тамадой.' },
+        { day:'2', title:'Третья винодельня и возвращение', desc:'Утренняя экскурсия, обед в семейном духане, возвращение в Тбилиси.' }
+      ],
+      includes:['Все дегустации','Ужин и завтрак','Ночёвка в гестхаусе','Транспорт','Гид'],
+      excludes:['Покупка вина','Чаевые'],
+      meeting:'Ваш отель в Тбилиси, 9:00'
+    },
+    en: {
+      title:'Kakheti Wine Cellars', subtitle:'Weekend trip',
+      desc:'Tastings at 3 family wineries, dinner with a Georgian family, guesthouse stay.',
+      fullDesc:'A weekend in Georgia\'s wine capital. Three family wineries, traditional dinner with a local family (supra), overnight at a cozy guesthouse overlooking the vineyards.',
+      duration:'2 days', level:'Easy', group:'up to 6',
+      itinerary: [
+        { day:'1', title:'Drive to Kakheti', desc:'Morning departure, monastery and viewpoint on the way.' },
+        { day:'1', title:'Two wineries and dinner', desc:'Tastings and a long Georgian dinner with a toastmaster.' },
+        { day:'2', title:'Third winery and return', desc:'Morning tour, lunch at a family tavern, return to Tbilisi.' }
+      ],
+      includes:['All tastings','Dinner and breakfast','Guesthouse stay','Transport','Guide'],
+      excludes:['Wine purchases','Tips'],
+      meeting:'Your hotel in Tbilisi, 9:00 AM'
+    }
+  }
+];
+
+const DEFAULT_REVIEWS = [
+  { name:'Мария К.', date:{ru:'март 2026',en:'March 2026'}, rating:5,
+    text:{ ru:'Лучший гид! Андрей знает каждый камень, водит так, что не устаёшь, и при этом успевает рассказать столько историй. Эльбрус был мечтой — мечта сбылась.',
+           en:'The best guide! Andrey knows every stone, leads at a perfect pace, and manages to tell so many stories along the way. Elbrus was a dream — dream came true.' },
+    avatar:'https://i.pravatar.cc/100?img=47' },
+  { name:'Иван и Анна', date:{ru:'февраль 2026',en:'February 2026'}, rating:5,
+    text:{ ru:'Брали индивидуальный тур на двоих, ходили в долину семи озёр. Палатки, костёр, звёзды — всё было организовано на пять с плюсом. Спасибо!',
+           en:'We took a private tour for two to the Valley of Seven Lakes. Tents, campfire, stars — everything was organized perfectly. Thank you!' },
+    avatar:'https://i.pravatar.cc/100?img=12' },
+  { name:'Сергей Л.', date:{ru:'январь 2026',en:'January 2026'}, rating:5,
+    text:{ ru:'Сначала боялся идти с ребёнком (10 лет), но Андрей подобрал маршрут идеально. Сын в восторге, я тоже. Вернёмся ещё.',
+           en:'I was nervous about going with my 10-year-old, but Andrey picked the perfect route. My son loved it and so did I. We\'ll be back.' },
+    avatar:'https://i.pravatar.cc/100?img=33' },
+  { name:'Olga & Mark', date:{ru:'декабрь 2025',en:'December 2025'}, rating:5,
+    text:{ ru:'Брали гастро-тур в Тбилиси. Андрей отлично говорит по-английски, знает места, которые не находит ни один турист. Вино, еда, истории — идеально.',
+           en:'We took the gastro tour in Tbilisi. Andrey speaks excellent English, knows hidden places no tourist finds. Wine, food, stories — perfection.' },
+    avatar:'https://i.pravatar.cc/100?img=23' },
+  { name:'Даниил П.', date:{ru:'ноябрь 2025',en:'November 2025'}, rating:5,
+    text:{ ru:'Не первый раз в горах, но с таким гидом первый. Чувствуется опыт, всегда спокоен, всё под контролем. Рекомендую всем.',
+           en:'Not my first time in the mountains, but my first time with a guide like this. You can tell he\'s experienced, always calm, everything under control. Highly recommended.' },
+    avatar:'https://i.pravatar.cc/100?img=8' }
+];
+
+const DEFAULT_BLOG = [
+  { id:1,
+    title:{ ru:'Что взять в горы летом: чек-лист на 5 дней', en:'What to pack for a 5-day summer hike' },
+    date:{ ru:'5 мая 2026', en:'May 5, 2026' },
+    read:{ ru:'7 мин', en:'7 min' },
+    img:'https://images.unsplash.com/photo-1551632811-561732d1e306?auto=format&fit=crop&w=800&q=80',
+    excerpt:{ ru:'Собрал универсальный список снаряжения, который проверен сотнями походов. От термобелья до запасных шнурков.',
+              en:'A universal gear list, tested over hundreds of trips. From base layers to spare laces.' } },
+  { id:2,
+    title:{ ru:'Эльбрус с юга или с севера: что выбрать новичку', en:'Elbrus from south or north: which route for beginners' },
+    date:{ ru:'22 апреля 2026', en:'April 22, 2026' },
+    read:{ ru:'10 мин', en:'10 min' },
+    img:'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=800&q=80',
+    excerpt:{ ru:'Разбираем плюсы и минусы двух главных маршрутов. Кому подойдёт классика с юга, а кому — северная сторона.',
+              en:'Pros and cons of the two main routes. Who should pick the classic southern approach, and who the wild north.' } },
+  { id:3,
+    title:{ ru:'5 неочевидных кафе старого Тбилиси', en:'5 hidden cafes in Old Tbilisi' },
+    date:{ ru:'10 апреля 2026', en:'April 10, 2026' },
+    read:{ ru:'5 мин', en:'5 min' },
+    img:'https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=800&q=80',
+    excerpt:{ ru:'Места, куда я вожу гостей только во второй раз. Без туристов, с настоящей грузинской кухней.',
+              en:'Places I only take guests on their second visit. No tourists, real Georgian food.' } }
+];
+
+const DEFAULT_FAQ = [
+  { q:{ ru:'Что взять с собой?', en:'What should I bring?' },
+    a:{ ru:'Базовый список зависит от тура и сезона. После бронирования вы получите детальный чек-лист. Главное — удобная обувь и одежда по погоде.',
+        en:'The basic list depends on the tour and season. After booking you\'ll receive a detailed checklist. The most important things: comfortable shoes and weather-appropriate clothing.' } },
+  { q:{ ru:'Какая нужна физическая подготовка?', en:'What fitness level do I need?' },
+    a:{ ru:'У каждого тура указан уровень сложности. На «лёгких» справится любой здоровый человек. Для «высоких» нужен опыт многодневных походов.',
+        en:'Each tour has a difficulty level. Anyone healthy can do an "easy" one. "High" tours require multi-day trekking experience.' } },
+  { q:{ ru:'Что, если пойдёт дождь?', en:'What if it rains?' },
+    a:{ ru:'Если погодные условия безопасны — идём с дождевиками. Если небезопасны — переносим на резервную дату или возвращаем 100% предоплаты.',
+        en:'If conditions are safe — we go with rain gear. If unsafe — we reschedule or refund 100% of the deposit.' } },
+  { q:{ ru:'Как происходит оплата?', en:'How does payment work?' },
+    a:{ ru:'Можно картой через сайт, переводом или наличными при встрече. Предоплата обычно 30%, остаток — в день тура.',
+        en:'Card payment via website, bank transfer, or cash on arrival. Deposit is usually 30%, balance on the day of the tour.' } },
+  { q:{ ru:'Можно ли отменить или перенести?', en:'Can I cancel or reschedule?' },
+    a:{ ru:'Бесплатная отмена за 14+ дней. За 7–14 дней — 50% возврата. Перенос на другую дату возможен в любой момент.',
+        en:'Free cancellation 14+ days ahead. 7-14 days — 50% refund. Rescheduling to another date is always possible.' } },
+  { q:{ ru:'Берёте ли детей?', en:'Do you take children?' },
+    a:{ ru:'Да, на большинство маршрутов. Минимальный возраст указан в описании тура. Для семей делаем индивидуальную скидку.',
+        en:'Yes, on most routes. The minimum age is listed in each tour description. We offer a family discount.' } },
+  { q:{ ru:'Есть ли страховка?', en:'Is insurance included?' },
+    a:{ ru:'Базовая страховка от несчастного случая включена в стоимость всех горных туров. Для серьёзных восхождений — дополнительная страховка обязательна.',
+        en:'Basic accident insurance is included in all mountain tours. For serious ascents, additional insurance is mandatory.' } }
+];
+
+const DEFAULT_TEXTS = { heroTitle: 'Авторские туры в твой ритм', heroSub: 'Индивидуальные и групповые маршруты...' };
+
+const ROUTES = [
+  { lat: 43.3499, lng: 42.4453, name: { ru:'Эльбрус',  en:'Mt. Elbrus' }, desc: { ru:'Восхождение на высшую точку Европы.', en:'Ascent of Europe\'s highest peak.' } },
+  { lat: 43.2367, lng: 42.4940, name: { ru:'Чегет',    en:'Mt. Cheget' }, desc: { ru:'Закатный треккинг.', en:'Sunset hike.' } },
+  { lat: 41.6938, lng: 44.8015, name: { ru:'Тбилиси',  en:'Tbilisi'    }, desc: { ru:'Гастро-тур по старому городу.', en:'Old town food tour.' } },
+  { lat: 41.6500, lng: 45.6906, name: { ru:'Кахетия',  en:'Kakheti'    }, desc: { ru:'Винные подвалы.', en:'Wine cellars.' } },
+  { lat: 43.2520, lng: 41.0667, name: { ru:'Сухум',    en:'Sukhumi'    }, desc: { ru:'Береговой треккинг.', en:'Coastal trekking.' } }
+];
+
+/* Storage */
+const STORE = {
+  get(k, fallback) { try { const v = localStorage.getItem('guide_'+k); return v ? JSON.parse(v) : fallback; } catch { return fallback; } },
+  set(k, v) { localStorage.setItem('guide_'+k, JSON.stringify(v)); }
+};
+let tours   = STORE.get('tours',   DEFAULT_TOURS);
+let reviews = STORE.get('reviews', DEFAULT_REVIEWS);
+let blog    = STORE.get('blog',    DEFAULT_BLOG);
+let faq     = STORE.get('faq',     DEFAULT_FAQ);
+let texts   = STORE.get('texts',   DEFAULT_TEXTS);
+
+/* Helper to read field with current language, falling back to RU */
+function L(obj, field) {
+  if (!obj) return '';
+  if (obj[field] && typeof obj[field] === 'object') return obj[field][currentLang] || obj[field].ru || '';
+  // tour structure has ru/en sub-objects
+  if (obj[currentLang] && obj[currentLang][field] !== undefined) return obj[currentLang][field];
+  if (obj.ru && obj.ru[field] !== undefined) return obj.ru[field];
+  return obj[field] || '';
+}
+
+/* =========================================
+   RENDER
+   ========================================= */
+function renderTours(cat='all') {
+  currentFilter = cat;
+  const grid = document.getElementById('toursGrid');
+  const filtered = cat === 'all' ? tours : tours.filter(t => t.cat === cat);
+  grid.innerHTML = filtered.map(tr => `
+    <article class="tour-card bg-white rounded-2xl overflow-hidden shadow-md" data-aos="fade-up" onclick="openTourDetail(${tr.id})">
+      <div class="relative h-64 overflow-hidden">
+        <img src="${tr.img}" alt="${L(tr,'title')}" class="tour-img w-full h-full object-cover" />
+        <div class="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-semibold text-night-800">${L(tr,'level')}</div>
+        <div class="absolute bottom-4 right-4 bg-accent text-white px-4 py-2 rounded-full text-sm font-bold">${L(tr,'price')}</div>
+      </div>
+      <div class="p-6">
+        <div class="text-xs uppercase tracking-widest text-accent mb-2">${L(tr,'subtitle')}</div>
+        <h3 class="font-display text-2xl text-night-900 mb-2">${L(tr,'title')}</h3>
+        <p class="text-night-500 text-sm mb-5">${L(tr,'desc')}</p>
+        <div class="flex items-center justify-between text-sm text-night-500 mb-5 pb-5 border-b border-night-100">
+          <span class="flex items-center gap-1">⏱ ${L(tr,'duration')}</span>
+          <span class="flex items-center gap-1">👥 ${L(tr,'group')}</span>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="event.stopPropagation(); openTourDetail(${tr.id})" class="flex-1 border-2 border-night-900 text-night-900 py-3 rounded-full font-semibold hover:bg-night-900 hover:text-white transition">${t('tours.details')}</button>
+          <button onclick="event.stopPropagation(); bookTour(${tr.id})" class="flex-1 btn-primary py-3 rounded-full font-semibold">${t('tours.book')}</button>
+        </div>
+      </div>
+    </article>
+  `).join('') || `<div class="col-span-3 text-center text-night-500 py-12">No tours in this category</div>`;
+  AOS.refresh();
+}
+
+function renderBookingTours() {
+  const c = document.getElementById('bookingTours');
+  c.innerHTML = tours.map(tr => `
+    <label class="booking-tour-card flex gap-3 p-3 bg-white/5 border border-white/10 rounded-xl cursor-pointer hover:border-accent transition">
+      <input type="radio" name="tour" value="${tr.id}" class="mt-1 accent-orange-600" />
+      <img src="${tr.img}" class="w-16 h-16 rounded-lg object-cover" />
+      <div class="flex-1">
+        <div class="font-semibold text-sm">${L(tr,'title')}</div>
+        <div class="text-xs text-white/60">${L(tr,'duration')} · ${L(tr,'price')}</div>
+      </div>
+    </label>
+  `).join('');
+}
+
+function renderReviews() {
+  const wrap = document.getElementById('reviewsWrapper');
+  wrap.innerHTML = reviews.map(r => {
+    const date = typeof r.date === 'object' ? (r.date[currentLang] || r.date.ru) : r.date;
+    const text = typeof r.text === 'object' ? (r.text[currentLang] || r.text.ru) : r.text;
+    return `
+    <div class="swiper-slide">
+      <div class="bg-sand-50 rounded-2xl p-8 h-full">
+        <div class="stars text-lg mb-4">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</div>
+        <p class="text-night-700 mb-6 italic">«${text}»</p>
+        <div class="flex items-center gap-3 mt-auto">
+          <img src="${r.avatar}" class="w-12 h-12 rounded-full object-cover" />
+          <div>
+            <div class="font-semibold text-night-900">${r.name}</div>
+            <div class="text-sm text-night-500">${date}</div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  if (window._reviewsSwiper) window._reviewsSwiper.destroy(true, true);
+  window._reviewsSwiper = new Swiper('.reviewsSwiper', {
+    slidesPerView: 1, spaceBetween: 24, loop: true,
+    autoplay: { delay: 5000 },
+    pagination: { el: '.swiper-pagination', clickable: true },
+    breakpoints: { 640:{slidesPerView:2}, 1024:{slidesPerView:3} }
+  });
+}
+
+function renderBlog() {
+  const g = document.getElementById('blogGrid');
+  g.innerHTML = blog.map((p,i) => {
+    const title = typeof p.title === 'object' ? (p.title[currentLang] || p.title.ru) : p.title;
+    const date  = typeof p.date  === 'object' ? (p.date[currentLang]  || p.date.ru)  : p.date;
+    const read  = typeof p.read  === 'object' ? (p.read[currentLang]  || p.read.ru)  : p.read;
+    const exc   = typeof p.excerpt === 'object' ? (p.excerpt[currentLang] || p.excerpt.ru) : p.excerpt;
+    return `
+    <article class="group cursor-pointer" data-aos="fade-up" data-aos-delay="${i*100}">
+      <div class="overflow-hidden rounded-2xl mb-5">
+        <img src="${p.img}" alt="${title}" class="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-700" />
+      </div>
+      <div class="flex items-center gap-3 text-sm text-night-500 mb-3">
+        <span>${date}</span><span>·</span><span>${read}</span>
+      </div>
+      <h3 class="font-display text-2xl text-night-900 mb-3 group-hover:text-accent transition">${title}</h3>
+      <p class="text-night-500 mb-4">${exc}</p>
+      <a href="#" class="text-accent font-semibold inline-flex items-center gap-2 group-hover:gap-3 transition-all">${t('blog.read')}</a>
+    </article>`;
+  }).join('');
+}
+
+function renderFaq() {
+  document.getElementById('faqList').innerHTML = faq.map((f,i) => {
+    const q = typeof f.q === 'object' ? (f.q[currentLang] || f.q.ru) : f.q;
+    const a = typeof f.a === 'object' ? (f.a[currentLang] || f.a.ru) : f.a;
+    return `
+    <details class="faq-item bg-white/5 border border-white/10 rounded-xl overflow-hidden" data-aos="fade-up" data-aos-delay="${i*50}">
+      <summary class="cursor-pointer p-5 flex items-center justify-between list-none">
+        <span class="font-semibold pr-4">${q}</span>
+        <span class="faq-icon text-accent text-2xl">+</span>
+      </summary>
+      <div class="px-5 pb-5 text-white/70 leading-relaxed">${a}</div>
+    </details>`;
+  }).join('');
+}
+
+/* =========================================
+   TOUR DETAIL MODAL
+   ========================================= */
+function openTourDetail(id) {
+  const tr = tours.find(x => x.id === id);
+  if (!tr) return;
+  const includes = (tr[currentLang] && tr[currentLang].includes) || tr.ru.includes || [];
+  const excludes = (tr[currentLang] && tr[currentLang].excludes) || tr.ru.excludes || [];
+  const itinerary = (tr[currentLang] && tr[currentLang].itinerary) || tr.ru.itinerary || [];
+
+  document.getElementById('tourDetailContent').innerHTML = `
+    <div class="tour-detail-hero" style="background-image: url('${tr.img}');">
+      <button class="tour-detail-close" onclick="closeTourDetail()">×</button>
+      <div class="absolute bottom-0 left-0 right-0 p-4 sm:p-8 text-white">
+        <div class="text-accent text-xs uppercase tracking-widest mb-2">${L(tr,'subtitle')}</div>
+        <h2 class="font-display text-2xl sm:text-4xl md:text-5xl mb-2 sm:mb-4">${L(tr,'title')}</h2>
+      </div>
+    </div>
+
+    <div class="p-4 sm:p-8">
+      <!-- Quick stats -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div class="bg-sand-50 rounded-xl p-4 text-center">
+          <div class="text-xs text-night-500 uppercase tracking-widest mb-1">${t('td.duration')}</div>
+          <div class="font-semibold text-night-900">${L(tr,'duration')}</div>
+        </div>
+        <div class="bg-sand-50 rounded-xl p-4 text-center">
+          <div class="text-xs text-night-500 uppercase tracking-widest mb-1">${t('td.level')}</div>
+          <div class="font-semibold text-night-900">${L(tr,'level')}</div>
+        </div>
+        <div class="bg-sand-50 rounded-xl p-4 text-center">
+          <div class="text-xs text-night-500 uppercase tracking-widest mb-1">${t('td.group')}</div>
+          <div class="font-semibold text-night-900">${L(tr,'group')}</div>
+        </div>
+        <div class="bg-accent text-white rounded-xl p-4 text-center">
+          <div class="text-xs uppercase tracking-widest mb-1 opacity-80">${t('td.price')}</div>
+          <div class="font-semibold">${L(tr,'price')}</div>
+        </div>
+      </div>
+
+      <!-- About -->
+      <div class="mb-8">
+        <h3 class="font-display text-2xl text-night-900 mb-3">${t('td.about')}</h3>
+        <p class="text-night-600 leading-relaxed">${L(tr,'fullDesc')}</p>
+      </div>
+
+      <!-- Photo strip -->
+      ${tr.photos && tr.photos.length ? `
+      <div class="grid grid-cols-3 gap-3 mb-8">
+        ${tr.photos.map(p => `<img src="${p}" class="w-full h-32 object-cover rounded-xl cursor-pointer hover:opacity-90 transition" onclick="document.getElementById('lightboxImg').src='${p}'; document.getElementById('lightbox').classList.add('active');" />`).join('')}
+      </div>` : ''}
+
+      <!-- Itinerary -->
+      ${itinerary.length ? `
+      <div class="mb-8">
+        <h3 class="font-display text-2xl text-night-900 mb-4">${t('td.program')}</h3>
+        <div class="space-y-3">
+          ${itinerary.map(i => `
+            <div class="flex gap-4 p-4 bg-sand-50 rounded-xl">
+              <div class="flex-shrink-0 w-14 h-14 rounded-full bg-accent text-white flex flex-col items-center justify-center text-xs font-bold leading-tight">
+                <div class="opacity-80">${t('td.day')}</div>
+                <div class="text-lg">${i.day}</div>
+              </div>
+              <div>
+                <div class="font-semibold text-night-900 mb-1">${i.title}</div>
+                <div class="text-sm text-night-600">${i.desc}</div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>` : ''}
+
+      <!-- Included / not included -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div class="bg-green-50 rounded-xl p-6 border border-green-100">
+          <h4 class="font-display text-xl text-green-900 mb-4">✓ ${t('td.included')}</h4>
+          <ul class="space-y-2 text-sm text-night-700">
+            ${includes.map(x => `<li class="flex gap-2"><span class="text-green-600 flex-shrink-0">✓</span><span>${x}</span></li>`).join('')}
+          </ul>
+        </div>
+        <div class="bg-red-50 rounded-xl p-6 border border-red-100">
+          <h4 class="font-display text-xl text-red-900 mb-4">✗ ${t('td.excluded')}</h4>
+          <ul class="space-y-2 text-sm text-night-700">
+            ${excludes.map(x => `<li class="flex gap-2"><span class="text-red-500 flex-shrink-0">✗</span><span>${x}</span></li>`).join('')}
+          </ul>
+        </div>
+      </div>
+
+      <!-- Meeting point -->
+      <div class="bg-night-900 text-white rounded-xl p-6 mb-8">
+        <div class="flex gap-4 items-start">
+          <div class="w-12 h-12 rounded-full bg-accent flex items-center justify-center flex-shrink-0">📍</div>
+          <div>
+            <div class="text-accent text-xs uppercase tracking-widest mb-1">${t('td.meeting')}</div>
+            <div class="font-semibold">${L(tr,'meeting')}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CTA -->
+      <button onclick="closeTourDetail(); bookTour(${tr.id})" class="w-full btn-primary py-5 rounded-full font-semibold text-lg">
+        ${t('td.book')} · ${L(tr,'price')}
+      </button>
+    </div>
+  `;
+  document.getElementById('tourDetail').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+function closeTourDetail() {
+  document.getElementById('tourDetail').classList.remove('active');
+  document.body.style.overflow = '';
+}
+window.openTourDetail = openTourDetail;
+window.closeTourDetail = closeTourDetail;
+document.getElementById('tourDetail').addEventListener('click', (e) => {
+  if (e.target.id === 'tourDetail') closeTourDetail();
+});
+
+/* =========================================
+   INIT
+   ========================================= */
+AOS.init({ duration: 800, once: true, offset: 80 });
+
+applyTranslations();
+renderTours();
+renderBookingTours();
+renderReviews();
+renderBlog();
+renderFaq();
+
+/* Filters */
+document.querySelectorAll('.tour-filter').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tour-filter').forEach(b => {
+      b.classList.remove('bg-night-900','text-white','active');
+      b.classList.add('bg-white','text-night-700','border','border-night-200');
+    });
+    btn.classList.add('bg-night-900','text-white','active');
+    btn.classList.remove('bg-white','text-night-700','border','border-night-200');
+    renderTours(btn.dataset.cat);
+  });
+});
+
+/* Nav scroll */
+const nav = document.getElementById('navbar');
+function checkScroll() { window.scrollY > 50 ? nav.classList.add('nav-scrolled') : nav.classList.remove('nav-scrolled'); }
+window.addEventListener('scroll', checkScroll); checkScroll();
+
+/* Mobile menu */
+document.getElementById('mobileMenuBtn').addEventListener('click', () => document.getElementById('mobileMenu').classList.toggle('hidden'));
+document.querySelectorAll('#mobileMenu a').forEach(a => a.addEventListener('click', () => document.getElementById('mobileMenu').classList.add('hidden')));
+
+/* Languages */
+document.querySelectorAll('.lang-btn').forEach(b => {
+  b.addEventListener('click', () => setLang(b.dataset.lang));
+});
+
+/* Gallery lightbox */
+document.querySelectorAll('#gallery .gallery-item img').forEach(img => {
+  img.addEventListener('click', () => {
+    document.getElementById('lightboxImg').src = img.src.replace('w=600','w=1600').replace('w=900','w=1600');
+    document.getElementById('lightbox').classList.add('active');
+  });
+});
+function closeLightbox() { document.getElementById('lightbox').classList.remove('active'); }
+window.closeLightbox = closeLightbox;
+document.getElementById('lightbox').addEventListener('click', (e) => { if (e.target.id === 'lightbox') closeLightbox(); });
+
+/* Booking */
+let currentStep = 1;
+const TOTAL_STEPS = 4;
+
+function bookTour(id) {
+  document.querySelector('#booking').scrollIntoView({ behavior: 'smooth' });
+  setTimeout(() => {
+    const radio = document.querySelector(`input[name="tour"][value="${id}"]`);
+    if (radio) radio.checked = true;
+  }, 600);
+}
+window.bookTour = bookTour;
+
+function goToStep(n) {
+  document.querySelectorAll('.form-step').forEach(s => s.classList.remove('active'));
+  document.querySelector(`.form-step[data-step="${n}"]`).classList.add('active');
+  document.querySelectorAll('.step-indicator').forEach(s => {
+    const stepNum = +s.dataset.step;
+    s.classList.remove('active','completed');
+    if (stepNum < n) s.classList.add('completed');
+    if (stepNum === n) s.classList.add('active');
+  });
+  document.getElementById('stepProgress').style.width = ((n-1)/(TOTAL_STEPS-1)*100) + '%';
+  document.getElementById('prevStep').style.visibility = n === 1 ? 'hidden' : 'visible';
+  document.getElementById('nextStep').style.display = n === TOTAL_STEPS ? 'none' : 'inline-block';
+  document.getElementById('submitBooking').style.display = n === TOTAL_STEPS ? 'inline-block' : 'none';
+  if (n === TOTAL_STEPS) renderBookingSummary();
+}
+function renderBookingSummary() {
+  const form = document.getElementById('bookingForm');
+  const tourId = form.tour ? form.tour.value : null;
+  const tour = tours.find(x => x.id == tourId);
+  document.getElementById('bookingSummary').innerHTML = `
+    <div class="text-white/70 text-xs uppercase tracking-wider mb-2">${t('booking.summary.title')}</div>
+    <div><strong>${t('booking.summary.tour')}:</strong> ${tour ? L(tour,'title') : t('booking.summary.notSelected')}</div>
+    <div><strong>${t('booking.summary.date')}:</strong> ${form.date.value || '—'} (${form.flex.value})</div>
+    <div><strong>${t('booking.summary.guests')}:</strong> ${form.adults.value} ${t('booking.summary.adults')} + ${form.children.value} ${t('booking.summary.children')}</div>
+    ${form.notes.value ? `<div class="mt-2"><strong>${t('booking.summary.notes')}:</strong> ${form.notes.value}</div>` : ''}
+  `;
+}
+document.getElementById('nextStep').addEventListener('click', () => {
+  if (currentStep === 1 && !document.querySelector('input[name="tour"]:checked')) { alert(t('booking.selectTour')); return; }
+  if (currentStep === 2 && !document.querySelector('input[name="date"]').value) { alert(t('booking.selectDate')); return; }
+  if (currentStep < TOTAL_STEPS) { currentStep++; goToStep(currentStep); }
+});
+document.getElementById('prevStep').addEventListener('click', () => {
+  if (currentStep > 1) { currentStep--; goToStep(currentStep); }
+});
+document.querySelectorAll('.qty-btn').forEach(b => {
+  b.addEventListener('click', () => {
+    const input = document.querySelector(`input[name="${b.dataset.target}"]`);
+    let v = +input.value;
+    v += b.dataset.op === '+' ? 1 : -1;
+    if (v < (+input.min || 0)) v = +input.min || 0;
+    input.value = v;
+  });
+});
+document.getElementById('bookingForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  alert(t('booking.sent'));
+  e.target.reset();
+  currentStep = 1; goToStep(1);
+});
+
+document.getElementById('quickContact').addEventListener('submit', (e) => {
+  e.preventDefault();
+  alert(t('contacts.quick.sent'));
+  e.target.reset();
+});
+
+/* Map */
+let _map = null, _markers = [];
+function renderRoutes() {
+  if (!_map) {
+    _map = L.map('routesMap', { scrollWheelZoom: false }).setView([43.0, 43.5], 6);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap', maxZoom: 18 }).addTo(_map);
+  }
+  _markers.forEach(m => _map.removeLayer(m));
+  _markers = [];
+  ROUTES.forEach(r => {
+    const m = L.marker([r.lat, r.lng]).addTo(_map).bindPopup(`<strong>${r.name[currentLang] || r.name.ru}</strong><br>${r.desc[currentLang] || r.desc.ru}`);
+    _markers.push(m);
+  });
+}
+renderRoutes();
+
+/* =========================================
+   ADMIN
+   ========================================= */
+const adminPanel = document.getElementById('adminPanel');
+document.getElementById('adminFab').addEventListener('click', () => adminPanel.classList.add('open'));
+document.getElementById('closeAdmin').addEventListener('click', () => adminPanel.classList.remove('open'));
+
+document.getElementById('adminLoginBtn').addEventListener('click', () => {
+  if (document.getElementById('adminUser').value === 'admin' && document.getElementById('adminPass').value === 'admin') {
+    document.getElementById('adminLogin').classList.add('hidden');
+    document.getElementById('adminDashboard').classList.remove('hidden');
+    renderAdminTours(); renderAdminReviews(); renderAdminBlog();
+    document.getElementById('textHero').value = texts.heroTitle;
+    document.getElementById('textHeroSub').value = texts.heroSub;
+  } else { alert(t('admin.wrongPass')); }
+});
+
+document.querySelectorAll('.admin-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.admin-tab').forEach(x => { x.classList.remove('border-accent','text-accent'); x.classList.add('border-transparent','text-night-500'); });
+    tab.classList.add('border-accent','text-accent'); tab.classList.remove('border-transparent','text-night-500');
+    document.querySelectorAll('.admin-content').forEach(c => c.classList.add('hidden'));
+    document.querySelector(`.admin-content[data-content="${tab.dataset.tab}"]`).classList.remove('hidden');
+  });
+});
+
+function renderAdminTours() {
+  document.getElementById('adminToursList').innerHTML = tours.map(tr => `
+    <div class="flex gap-3 items-center p-3 border border-night-100 rounded-lg">
+      <img src="${tr.img}" class="w-14 h-14 rounded-lg object-cover" />
+      <div class="flex-1">
+        <div class="font-semibold text-night-900 text-sm">${L(tr,'title')}</div>
+        <div class="text-xs text-night-500">${L(tr,'price')} · ${L(tr,'duration')}</div>
+      </div>
+      <button onclick="editTour(${tr.id})" class="text-accent text-sm hover:underline">✏️</button>
+      <button onclick="deleteTour(${tr.id})" class="text-red-500 text-sm hover:underline">🗑</button>
+    </div>
+  `).join('');
+}
+
+window.editTour = function(id) {
+  const tr = id === 'new' ? { id: Date.now(), cat:'mountain', img:'', price:{ru:'',en:''}, photos:[], ru:{title:'',subtitle:'',desc:'',fullDesc:'',duration:'',level:'Средний',group:'',itinerary:[],includes:[],excludes:[],meeting:''}, en:{title:'',subtitle:'',desc:'',fullDesc:'',duration:'',level:'Moderate',group:'',itinerary:[],includes:[],excludes:[],meeting:''} } : tours.find(x => x.id === id);
+  openModal('Edit tour', `
+    <div class="space-y-3">
+      <div class="text-xs uppercase tracking-widest text-night-500 mb-1">Russian</div>
+      <input id="ed-title-ru" value="${tr.ru.title}" placeholder="Title (RU)" class="w-full border border-night-200 rounded-lg px-4 py-2" />
+      <input id="ed-subtitle-ru" value="${tr.ru.subtitle}" placeholder="Subtitle (RU)" class="w-full border border-night-200 rounded-lg px-4 py-2" />
+      <textarea id="ed-desc-ru" rows="2" placeholder="Short description (RU)" class="w-full border border-night-200 rounded-lg px-4 py-2">${tr.ru.desc}</textarea>
+      <div class="text-xs uppercase tracking-widest text-night-500 mb-1 mt-3">English</div>
+      <input id="ed-title-en" value="${tr.en.title}" placeholder="Title (EN)" class="w-full border border-night-200 rounded-lg px-4 py-2" />
+      <input id="ed-subtitle-en" value="${tr.en.subtitle}" placeholder="Subtitle (EN)" class="w-full border border-night-200 rounded-lg px-4 py-2" />
+      <textarea id="ed-desc-en" rows="2" placeholder="Short description (EN)" class="w-full border border-night-200 rounded-lg px-4 py-2">${tr.en.desc}</textarea>
+      <div class="text-xs uppercase tracking-widest text-night-500 mb-1 mt-3">Common</div>
+      <input id="ed-img" value="${tr.img}" placeholder="Cover image URL" class="w-full border border-night-200 rounded-lg px-4 py-2" />
+      <div class="grid grid-cols-2 gap-2">
+        <input id="ed-price-ru" value="${tr.price.ru || ''}" placeholder="Price (RU)" class="border border-night-200 rounded-lg px-4 py-2" />
+        <input id="ed-price-en" value="${tr.price.en || ''}" placeholder="Price (EN)" class="border border-night-200 rounded-lg px-4 py-2" />
+      </div>
+      <select id="ed-cat" class="w-full border border-night-200 rounded-lg px-4 py-2">
+        ${[['mountain','Mountains'],['city','City'],['trek','Trekking'],['gastro','Gastronomy']].map(([v,l]) => `<option value="${v}" ${v===tr.cat?'selected':''}>${l}</option>`).join('')}
+      </select>
+      <p class="text-xs text-night-400">For detailed editing (itinerary, includes, etc.) edit the source JS. This dialog covers main fields.</p>
+      <button onclick="saveTour(${id === 'new' ? 'null' : tr.id})" class="btn-primary w-full py-3 rounded-full font-semibold">Save</button>
+    </div>
+  `);
+};
+
+window.saveTour = function(id) {
+  const existing = id ? tours.find(x => x.id === id) : null;
+  const data = {
+    id: id || Date.now(),
+    cat: document.getElementById('ed-cat').value,
+    img: document.getElementById('ed-img').value || 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=900&q=80',
+    price: { ru: document.getElementById('ed-price-ru').value, en: document.getElementById('ed-price-en').value },
+    photos: existing ? existing.photos : [],
+    ru: {
+      ...(existing ? existing.ru : { duration:'', level:'Средний', group:'', fullDesc:'', itinerary:[], includes:[], excludes:[], meeting:'' }),
+      title: document.getElementById('ed-title-ru').value,
+      subtitle: document.getElementById('ed-subtitle-ru').value,
+      desc: document.getElementById('ed-desc-ru').value
+    },
+    en: {
+      ...(existing ? existing.en : { duration:'', level:'Moderate', group:'', fullDesc:'', itinerary:[], includes:[], excludes:[], meeting:'' }),
+      title: document.getElementById('ed-title-en').value,
+      subtitle: document.getElementById('ed-subtitle-en').value,
+      desc: document.getElementById('ed-desc-en').value
+    }
+  };
+  if (id) tours = tours.map(x => x.id === id ? data : x);
+  else tours.push(data);
+  STORE.set('tours', tours);
+  closeModal();
+  renderAdminTours(); renderTours(currentFilter); renderBookingTours();
+};
+
+window.deleteTour = function(id) {
+  if (!confirm(t('admin.delTour'))) return;
+  tours = tours.filter(x => x.id !== id);
+  STORE.set('tours', tours);
+  renderAdminTours(); renderTours(currentFilter); renderBookingTours();
+};
+
+document.getElementById('addTourBtn').addEventListener('click', () => editTour('new'));
+
+function renderAdminReviews() {
+  document.getElementById('adminReviewsList').innerHTML = reviews.map((r,i) => {
+    const text = typeof r.text === 'object' ? (r.text.ru || r.text.en) : r.text;
+    const date = typeof r.date === 'object' ? (r.date.ru || r.date.en) : r.date;
+    return `
+    <div class="p-3 border border-night-100 rounded-lg">
+      <div class="flex justify-between items-start">
+        <div><div class="font-semibold text-night-900 text-sm">${r.name}</div><div class="text-xs text-night-500">${date} · ${r.rating}★</div></div>
+        <button onclick="deleteReview(${i})" class="text-red-500 text-sm">🗑</button>
+      </div>
+      <div class="text-xs text-night-600 mt-2 line-clamp-2">${text}</div>
+    </div>`;
+  }).join('');
+}
+window.deleteReview = function(i) {
+  if (!confirm(t('admin.delReview'))) return;
+  reviews.splice(i, 1); STORE.set('reviews', reviews);
+  renderAdminReviews(); renderReviews();
+};
+document.getElementById('addReviewBtn').addEventListener('click', () => {
+  openModal('New review', `
+    <div class="space-y-3">
+      <input id="r-name" placeholder="Name" class="w-full border border-night-200 rounded-lg px-4 py-2" />
+      <input id="r-date" placeholder="Date" class="w-full border border-night-200 rounded-lg px-4 py-2" />
+      <select id="r-rating" class="w-full border border-night-200 rounded-lg px-4 py-2"><option value="5">5 ★</option><option value="4">4</option><option value="3">3</option></select>
+      <textarea id="r-text-ru" rows="3" placeholder="Review text (RU)" class="w-full border border-night-200 rounded-lg px-4 py-2"></textarea>
+      <textarea id="r-text-en" rows="3" placeholder="Review text (EN)" class="w-full border border-night-200 rounded-lg px-4 py-2"></textarea>
+      <input id="r-avatar" placeholder="Avatar URL (opt.)" class="w-full border border-night-200 rounded-lg px-4 py-2" />
+      <button onclick="saveReview()" class="btn-primary w-full py-3 rounded-full font-semibold">Save</button>
+    </div>
+  `);
+});
+window.saveReview = function() {
+  reviews.unshift({
+    name: document.getElementById('r-name').value,
+    date: { ru: document.getElementById('r-date').value, en: document.getElementById('r-date').value },
+    rating: +document.getElementById('r-rating').value,
+    text: { ru: document.getElementById('r-text-ru').value, en: document.getElementById('r-text-en').value || document.getElementById('r-text-ru').value },
+    avatar: document.getElementById('r-avatar').value || `https://i.pravatar.cc/100?u=${Date.now()}`
+  });
+  STORE.set('reviews', reviews); closeModal(); renderAdminReviews(); renderReviews();
+};
+
+function renderAdminBlog() {
+  document.getElementById('adminBlogList').innerHTML = blog.map((p,i) => {
+    const title = typeof p.title === 'object' ? (p.title.ru || p.title.en) : p.title;
+    const date  = typeof p.date  === 'object' ? (p.date.ru  || p.date.en)  : p.date;
+    return `
+    <div class="p-3 border border-night-100 rounded-lg">
+      <div class="flex justify-between items-start">
+        <div class="flex-1"><div class="font-semibold text-night-900 text-sm">${title}</div><div class="text-xs text-night-500">${date}</div></div>
+        <button onclick="deletePost(${i})" class="text-red-500 text-sm">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+window.deletePost = function(i) {
+  if (!confirm(t('admin.delPost'))) return;
+  blog.splice(i,1); STORE.set('blog', blog);
+  renderAdminBlog(); renderBlog();
+};
+document.getElementById('addPostBtn').addEventListener('click', () => {
+  openModal('New article', `
+    <div class="space-y-3">
+      <input id="p-title-ru" placeholder="Title (RU)" class="w-full border border-night-200 rounded-lg px-4 py-2" />
+      <input id="p-title-en" placeholder="Title (EN)" class="w-full border border-night-200 rounded-lg px-4 py-2" />
+      <input id="p-date" placeholder="Date" class="w-full border border-night-200 rounded-lg px-4 py-2" />
+      <input id="p-read" placeholder="Read time" class="w-full border border-night-200 rounded-lg px-4 py-2" />
+      <input id="p-img" placeholder="Cover image URL" class="w-full border border-night-200 rounded-lg px-4 py-2" />
+      <textarea id="p-excerpt-ru" rows="2" placeholder="Excerpt (RU)" class="w-full border border-night-200 rounded-lg px-4 py-2"></textarea>
+      <textarea id="p-excerpt-en" rows="2" placeholder="Excerpt (EN)" class="w-full border border-night-200 rounded-lg px-4 py-2"></textarea>
+      <button onclick="savePost()" class="btn-primary w-full py-3 rounded-full font-semibold">Publish</button>
+    </div>
+  `);
+});
+window.savePost = function() {
+  blog.unshift({
+    id: Date.now(),
+    title:   { ru: document.getElementById('p-title-ru').value, en: document.getElementById('p-title-en').value || document.getElementById('p-title-ru').value },
+    date:    { ru: document.getElementById('p-date').value,     en: document.getElementById('p-date').value },
+    read:    { ru: document.getElementById('p-read').value || '5 мин', en: document.getElementById('p-read').value || '5 min' },
+    img:     document.getElementById('p-img').value || 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=800&q=80',
+    excerpt: { ru: document.getElementById('p-excerpt-ru').value, en: document.getElementById('p-excerpt-en').value || document.getElementById('p-excerpt-ru').value }
+  });
+  STORE.set('blog', blog); closeModal(); renderAdminBlog(); renderBlog();
+};
+
+document.getElementById('saveTexts').addEventListener('click', () => {
+  texts.heroTitle = document.getElementById('textHero').value;
+  texts.heroSub   = document.getElementById('textHeroSub').value;
+  STORE.set('texts', texts);
+  alert(t('admin.save') + ' ✓');
+});
+
+/* Modal */
+function openModal(title, html) {
+  document.getElementById('editModalTitle').textContent = title;
+  document.getElementById('editModalBody').innerHTML = html;
+  document.getElementById('editModal').classList.remove('hidden');
+  document.getElementById('editModal').classList.add('flex');
+}
+function closeModal() {
+  document.getElementById('editModal').classList.add('hidden');
+  document.getElementById('editModal').classList.remove('flex');
+}
+window.closeModal = closeModal;
+document.getElementById('closeEditModal').addEventListener('click', closeModal);
+document.getElementById('editModal').addEventListener('click', (e) => { if (e.target.id === 'editModal') closeModal(); });
+
+/* Close tour detail with ESC */
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    closeTourDetail();
+    closeLightbox();
+  }
+});
+</script>
+
+</body>
+</html>
