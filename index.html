@@ -13,13 +13,18 @@
       theme: {
         extend: {
           colors: {
-            night:   { 50:'#f4f6f8', 100:'#e6ebef', 200:'#c4cfd7', 300:'#9babb7', 400:'#6c8290', 500:'#496073', 600:'#36495a', 700:'#293948', 800:'#1c2733', 900:'#10171f' },
-            sand:    { 50:'#fbf8f3', 100:'#f5ecdb', 200:'#ead7b1', 300:'#dcbb84', 400:'#cfa05b', 500:'#bf8537', 600:'#9c6a2a', 700:'#754e21', 800:'#4f351a', 900:'#2a1d10' },
-            accent:  '#d97706'
+            /* Тёплые тёмные оттенки (вместо холодного night) */
+            night:   { 50:'#F0EDE8', 100:'#DCD6CB', 200:'#B5AC9C', 300:'#857B6A', 400:'#5C5446', 500:'#3D362D', 600:'#2D2722', 700:'#221E1A', 800:'#1A1612', 900:'#0F0D0A' },
+            /* Кремовая палитра. sand-50 теперь заметно темнее чем было */
+            sand:    { 50:'#ECE3CE', 100:'#E0D4B8', 200:'#D2C19D', 300:'#B9A57D', 400:'#9C8761', 500:'#7E6C4D', 600:'#5F523B', 700:'#42392A', 800:'#2A241A', 900:'#181410' },
+            /* Красный из логотипа TERRA ALTUS — заменяет оранжевый */
+            accent:  '#6D8C7A',
+            /* Золотой из солнца на логотипе — для подсветок */
+            gold:    '#E8B61C'
           },
           fontFamily: {
-            sans:    ['Inter', 'system-ui', 'sans-serif'],
-            display: ['"Playfair Display"', 'serif']
+            sans:    ['TildaSans', 'Arial', 'sans-serif'],
+            display: ['TildaSans', 'Arial', 'sans-serif']
           },
           animation: {
             'fade-in':  'fadeIn 1s ease-out forwards',
@@ -40,52 +45,96 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;500;700;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <!-- TildaSans — локальные файлы в /fonts/, никаких внешних шрифтов не нужно -->
+  <!-- Логотипные шрифты (только для бренд-логотипа) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Stardos+Stencil:wght@700&family=Cinzel:wght@400;500&display=swap" rel="stylesheet">
 
   <style>
     html { scroll-behavior: smooth; overflow-x: hidden; }
-    body { font-family: 'Inter', system-ui, sans-serif; color: #1c2733; background: #fbf8f3; overflow-x: hidden; width: 100%; }
+    /* TildaSans — 7 начертаний (Light…Black), локальные файлы в /fonts/ */
+    @font-face { font-family:'TildaSans'; font-style:normal; font-display:swap; font-weight:300;
+      src: url('fonts/TildaSans-Light.woff2')     format('woff2'), url('fonts/TildaSans-Light.woff')     format('woff'); }
+    @font-face { font-family:'TildaSans'; font-style:normal; font-display:swap; font-weight:400;
+      src: url('fonts/TildaSans-Regular.woff2')   format('woff2'), url('fonts/TildaSans-Regular.woff')   format('woff'); }
+    @font-face { font-family:'TildaSans'; font-style:normal; font-display:swap; font-weight:500;
+      src: url('fonts/TildaSans-Medium.woff2')    format('woff2'), url('fonts/TildaSans-Medium.woff')    format('woff'); }
+    @font-face { font-family:'TildaSans'; font-style:normal; font-display:swap; font-weight:600;
+      src: url('fonts/TildaSans-Semibold.woff2')  format('woff2'), url('fonts/TildaSans-Semibold.woff')  format('woff'); }
+    @font-face { font-family:'TildaSans'; font-style:normal; font-display:swap; font-weight:700;
+      src: url('fonts/TildaSans-Bold.woff2')      format('woff2'), url('fonts/TildaSans-Bold.woff')      format('woff'); }
+    @font-face { font-family:'TildaSans'; font-style:normal; font-display:swap; font-weight:800;
+      src: url('fonts/TildaSans-ExtraBold.woff2') format('woff2'), url('fonts/TildaSans-ExtraBold.woff') format('woff'); }
+    @font-face { font-family:'TildaSans'; font-style:normal; font-display:swap; font-weight:900;
+      src: url('fonts/TildaSans-Black.woff2')     format('woff2'), url('fonts/TildaSans-Black.woff')     format('woff'); }
+    body { font-family: 'TildaSans', Arial, sans-serif; color: #221E1A; background: #ECE3CE; overflow-x: hidden; width: 100%; }
     * { box-sizing: border-box; }
     img { max-width: 100%; height: auto; }
-    /* Leaflet override — иначе тайлы карты ломаются */
-    .leaflet-container img,
-    .leaflet-tile,
-    .leaflet-marker-icon,
-    .leaflet-marker-shadow,
-    .leaflet-image-layer,
-    .leaflet-tile-container img {
-      max-width: none !important;
-      height: auto;
+    /* Карточки маршрутов рядом с Google-картой */
+    .route-card { transition: all .2s ease; cursor: pointer; }
+    .route-card:hover { transform: translateY(-2px); border-color: #6D8C7A; box-shadow: 0 8px 20px rgba(0,0,0,.08); }
+    .route-card.route-card-active { border-color: #6D8C7A; background: #F6F2E6; box-shadow: 0 4px 14px rgba(109,140,122,.18); }
+    .route-card.route-card-active .route-pin { transform: scale(1.4); }
+    .route-card .route-pin {
+      width: 10px; height: 10px; border-radius: 50%; background: #6D8C7A;
+      box-shadow: 0 0 0 3px rgba(109,140,122,.2);
+      flex-shrink: 0; transition: transform .2s;
     }
-    .leaflet-container { background: #ddd; }
-    .font-display { font-family: 'Playfair Display', serif; }
+    .font-display { font-family: 'TildaSans', Arial, sans-serif; font-weight: 700; letter-spacing: -0.01em; }
+
+    /* === Увеличенные размеры мелких шрифтов для лучшей читаемости === */
+    .text-xs { font-size: 15px !important; line-height: 1.55 !important; }
+    .text-sm { font-size: 17px !important; line-height: 1.6 !important; }
+    .text-\[10px\] { font-size: 13px !important; }
+    .text-\[11px\] { font-size: 14px !important; }
+    .booking-step-label { font-size: 14px !important; }
+    /* Подросший body-base — плавно подтягивает .text-base / .text-lg вместе со всем */
+    body { font-size: 18px; }
 
     /* === Mobile fixes === */
     @media (max-width: 767px) {
       section { padding-top: 64px !important; padding-bottom: 64px !important; }
       .hero-bg { min-height: 100svh; }
       h1 { word-break: break-word; }
-      .booking-step-label { font-size: 10px !important; }
+      .text-xs { font-size: 14px !important; }
+      .text-sm { font-size: 16px !important; }
+      .booking-step-label { font-size: 12px !important; }
+      body { font-size: 16.5px; }
     }
 
-    .hero-bg {
-      background-image:
-        linear-gradient(rgba(16,23,31,.55), rgba(16,23,31,.75)),
-        url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=2000&q=80');
-      background-size: cover;
-      background-position: center;
-      background-attachment: fixed;
+    .hero-bg { position: relative; overflow: hidden; }
+    .hero-slide {
+      position: absolute; inset: 0;
+      background-size: cover; background-position: center;
+      opacity: 0; transition: opacity 1.5s ease-in-out;
+      z-index: 0;
     }
-    @media (max-width: 768px) { .hero-bg { background-attachment: scroll; } }
+    .hero-slide.active { opacity: 1; }
+    .hero-overlay {
+      position: absolute; inset: 0; z-index: 1;
+      background: linear-gradient(rgba(15,13,10,.5), rgba(15,13,10,.75));
+      pointer-events: none;
+    }
+    /* Контролы слайдера: стрелки + точки в один ряд по центру внизу */
+    .hero-controls {
+      position: absolute; bottom: 32px; left: 50%; transform: translateX(-50%);
+      display: flex; align-items: center; gap: 18px; z-index: 5;
+    }
+    .hero-dots { display: flex; gap: 8px; }
+    .hero-dot {
+      width: 28px; height: 3px; background: rgba(255,255,255,.35); border: none;
+      cursor: pointer; transition: background .3s; padding: 0;
+    }
+    .hero-dot.active { background: #fff; }
 
     .tour-card .tour-img { transition: transform .8s ease; }
     .tour-card:hover .tour-img { transform: scale(1.08); }
     .tour-card { transition: transform .35s ease, box-shadow .35s ease; cursor: pointer; }
     .tour-card:hover { transform: translateY(-6px); box-shadow: 0 25px 50px -12px rgba(0,0,0,.25); }
 
-    .btn-primary { background: #d97706; color: white; transition: all .3s ease; }
-    .btn-primary:hover { background: #b45309; transform: translateY(-2px); box-shadow: 0 10px 25px -5px rgba(217,119,6,.4); }
+    .btn-primary { background: #6D8C7A; color: white; transition: all .3s ease; }
+    .btn-primary:hover { background: #557260; transform: translateY(-2px); box-shadow: 0 10px 25px -5px rgba(109,140,122,.4); }
     .btn-outline { border: 2px solid #fff; color: white; transition: all .3s ease; }
     .btn-outline:hover { background: #fff; color: #10171f; }
 
@@ -93,11 +142,64 @@
     .nav-scrolled .nav-link { color: #1c2733 !important; }
     .nav-scrolled .logo-text { color: #10171f !important; }
     .nav-scrolled .logo-sub { color: #496073 !important; }
-    .nav-scrolled #mobileMenuBtn {
-      background: #f5ecdb !important; color: #10171f !important; border-color: #e6ebef !important;
+    .nav-scrolled #mobileMenuBtn,
+    .nav-scrolled .contact-icon {
+      background: #E0D4B8 !important; color: #1A1612 !important; border-color: #C7B58A !important;
     }
-    .nav-scrolled .lang-btn { color: #496073 !important; }
-    .nav-scrolled .lang-btn.lang-active { color: #d97706 !important; }
+    .nav-scrolled .contact-icon:hover {
+      background: #6D8C7A !important; color: #fff !important; border-color: #6D8C7A !important;
+    }
+
+    /* === Language switcher (pill toggle) === */
+    .lang-switcher {
+      display: inline-flex; align-items: center;
+      background: rgba(255,255,255,.1);
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: 999px;
+      padding: 3px 3px 3px 9px;
+      gap: 2px;
+      transition: all .3s ease;
+    }
+    .lang-switcher .lang-globe {
+      width: 15px; height: 15px;
+      color: rgba(255,255,255,.7);
+      margin-right: 4px;
+      transition: color .3s;
+    }
+    .lang-switcher .lang-btn {
+      padding: 5px 11px;
+      border-radius: 999px;
+      font-size: 12px; font-weight: 700; letter-spacing: .5px;
+      color: rgba(255,255,255,.7);
+      background: transparent;
+      border: none; cursor: pointer;
+      transition: all .2s ease;
+      line-height: 1;
+    }
+    .lang-switcher .lang-btn:hover { color: rgba(255,255,255,.95); }
+    .lang-switcher .lang-btn.lang-active {
+      background: #fff;
+      color: #221E1A;
+      box-shadow: 0 1px 4px rgba(0,0,0,.12);
+    }
+    /* Светлая шапка (после скролла) */
+    .nav-scrolled .lang-switcher {
+      background: rgba(34,30,26,.05);
+      border-color: rgba(34,30,26,.12);
+    }
+    .nav-scrolled .lang-switcher .lang-globe { color: #5C5446; }
+    .nav-scrolled .lang-switcher .lang-btn { color: #5C5446; }
+    .nav-scrolled .lang-switcher .lang-btn:hover { color: #221E1A; }
+    .nav-scrolled .lang-switcher .lang-btn.lang-active {
+      background: #221E1A;
+      color: #fff;
+      box-shadow: 0 1px 4px rgba(0,0,0,.18);
+    }
+    /* Мобильный pill — тёмный фон в выпадающем меню */
+    .mobile-lang-pill {
+      background: rgba(255,255,255,.08);
+      border-color: rgba(255,255,255,.15);
+    }
 
     .faq-item { transition: all .3s ease; }
     .faq-item[open] .faq-icon { transform: rotate(45deg); }
@@ -119,7 +221,7 @@
     .lightbox-close { position: absolute; top: 24px; right: 24px; color: white; font-size: 32px; cursor: pointer; background: none; border: none; }
 
     .step-indicator { transition: all .3s ease; }
-    .step-indicator.active { background: #d97706; color: white; }
+    .step-indicator.active { background: #6D8C7A; color: white; }
     .step-indicator.completed { background: #16a34a; color: white; }
     .form-step { display: none; }
     .form-step.active { display: block; animation: fadeIn .4s ease-out; }
@@ -130,23 +232,36 @@
     .admin-panel.open { right: 0; }
     .admin-fab { position: fixed; bottom: 24px; right: 24px; z-index: 80; }
 
-    #routesMap { height: 480px; border-radius: 16px; z-index: 1; }
+    #routesMap { display: block; }
 
-    ::selection { background: #d97706; color: white; }
+    ::selection { background: #6D8C7A; color: white; }
 
     ::-webkit-scrollbar { width: 10px; height: 10px; }
     ::-webkit-scrollbar-track { background: #f5ecdb; }
     ::-webkit-scrollbar-thumb { background: #cfa05b; border-radius: 5px; }
     ::-webkit-scrollbar-thumb:hover { background: #bf8537; }
 
-    .scroll-indicator { animation: bounce 2s infinite; }
-    @keyframes bounce {
+    /* Анимация привязана к внутреннему элементу, чтобы не конфликтовать
+       с translateX(-50%) на родителе, который центрирует "Вниз". */
+    .scroll-indicator-inner { animation: bounceY 2s infinite; display: inline-flex; flex-direction: column; align-items: center; gap: 8px; }
+    @keyframes bounceY {
       0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
       40% { transform: translateY(-15px); }
       60% { transform: translateY(-8px); }
     }
+    /* Стрелки слайдера hero — компактные, в одном ряду с точками */
+    .hero-arrow {
+      width: 38px; height: 38px; border-radius: 50%;
+      background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.3);
+      backdrop-filter: blur(8px);
+      color: #fff; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; line-height: 1; transition: all .2s ease;
+      padding: 0; flex-shrink: 0;
+    }
+    .hero-arrow:hover { background: rgba(255,255,255,.28); transform: scale(1.08); }
 
-    .lang-active { color: #d97706 !important; font-weight: 700; }
+    /* .lang-active теперь стилизуется внутри .lang-switcher */
 
     /* Tour detail modal */
     .tour-detail-modal {
@@ -193,30 +308,44 @@
 <nav id="navbar" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300">
   <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
     <a href="#home" class="flex items-center gap-3">
-      <div class="w-11 h-11 rounded-full bg-accent flex items-center justify-center text-white text-xl">▲</div>
-      <div>
-        <div class="logo-text text-white font-display text-xl leading-tight" data-i18n="brand">Андрей Гид</div>
-        <div class="logo-sub text-white/70 text-xs tracking-wider uppercase" data-i18n="brandSub">авторские маршруты</div>
+      <img src="logo-icon.svg" alt="TERRA ALTUS" class="h-12 sm:h-12 w-auto flex-shrink-0" />
+      <div class="hidden sm:block leading-tight">
+        <div class="logo-text text-white font-bold text-lg sm:text-2xl tracking-wide" data-i18n="brand">TERRA ALTUS</div>
+        <div class="logo-sub text-white/70 text-[10px] sm:text-[11px] tracking-[0.25em] uppercase mt-0.5" data-i18n="brandSub">endless exploration</div>
       </div>
     </a>
 
-    <div class="hidden lg:flex items-center gap-8">
+    <div class="hidden lg:flex items-center gap-10">
       <a href="#tours"    class="nav-link text-white/90 hover:text-accent text-sm font-medium" data-i18n="nav.tours">Туры</a>
       <a href="#about"    class="nav-link text-white/90 hover:text-accent text-sm font-medium" data-i18n="nav.about">О гиде</a>
-      <a href="#gallery"  class="nav-link text-white/90 hover:text-accent text-sm font-medium" data-i18n="nav.gallery">Галерея</a>
       <a href="#reviews"  class="nav-link text-white/90 hover:text-accent text-sm font-medium" data-i18n="nav.reviews">Отзывы</a>
-      <a href="#map"      class="nav-link text-white/90 hover:text-accent text-sm font-medium" data-i18n="nav.map">Маршруты</a>
-      <a href="#blog"     class="nav-link text-white/90 hover:text-accent text-sm font-medium" data-i18n="nav.blog">Блог</a>
-      <a href="#faq"      class="nav-link text-white/90 hover:text-accent text-sm font-medium" data-i18n="nav.faq">FAQ</a>
       <a href="#contacts" class="nav-link text-white/90 hover:text-accent text-sm font-medium" data-i18n="nav.contacts">Контакты</a>
     </div>
 
-    <div class="flex items-center gap-3">
-      <div class="hidden md:flex items-center gap-2 text-sm">
-        <button class="nav-link lang-btn lang-active text-white" data-lang="ru">RU</button>
-        <span class="text-white/40">|</span>
-        <button class="nav-link lang-btn text-white/70" data-lang="en">EN</button>
+    <div class="flex items-center gap-3 sm:gap-4">
+      <!-- Мессенджеры -->
+      <div class="flex items-center gap-2">
+        <a href="https://t.me/terra_altus" target="_blank" rel="noopener" title="Telegram"
+           class="contact-icon w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white hover:bg-accent hover:border-accent transition">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.81-.23-.82-.78.18-1.17L20.69 4.4c.66-.3 1.31.17 1.05 1.18l-3.4 16.04c-.18.86-.7 1.07-1.41.67L13.16 19.6l-1.78 1.72c-.2.2-.37.38-.76.38h.04l.32-4.55z"/></svg>
+        </a>
+        <a href="https://wa.me/79991234567" target="_blank" rel="noopener" title="WhatsApp"
+           class="contact-icon w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white hover:bg-accent hover:border-accent transition">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51l-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479s1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.117.571-.085 1.758-.719 2.006-1.413.247-.694.247-1.289.173-1.413-.074-.123-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413"/></svg>
+        </a>
       </div>
+
+      <!-- Переключатель языка (pill toggle с глобус-иконкой) -->
+      <div class="lang-switcher hidden md:inline-flex">
+        <svg class="lang-globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="2" y1="12" x2="22" y2="12"/>
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+        </svg>
+        <button class="lang-btn lang-active" data-lang="ru">RU</button>
+        <button class="lang-btn" data-lang="en">EN</button>
+      </div>
+
       <a href="#booking" class="btn-primary px-5 py-2.5 rounded-full text-sm font-semibold hidden md:inline-block" data-i18n="nav.book">Забронировать</a>
       <button id="mobileMenuBtn" aria-label="Menu" class="lg:hidden w-11 h-11 flex items-center justify-center rounded-full bg-white/15 backdrop-blur-sm text-white text-xl border border-white/30 hover:bg-white/25 transition">☰</button>
     </div>
@@ -226,16 +355,18 @@
     <div class="px-6 py-4 space-y-3">
       <a href="#tours"    class="block text-white py-2 border-b border-white/10" data-i18n="nav.tours">Туры</a>
       <a href="#about"    class="block text-white py-2 border-b border-white/10" data-i18n="nav.about">О гиде</a>
-      <a href="#gallery"  class="block text-white py-2 border-b border-white/10" data-i18n="nav.gallery">Галерея</a>
       <a href="#reviews"  class="block text-white py-2 border-b border-white/10" data-i18n="nav.reviews">Отзывы</a>
-      <a href="#map"      class="block text-white py-2 border-b border-white/10" data-i18n="nav.map">Маршруты</a>
-      <a href="#blog"     class="block text-white py-2 border-b border-white/10" data-i18n="nav.blog">Блог</a>
-      <a href="#faq"      class="block text-white py-2 border-b border-white/10" data-i18n="nav.faq">FAQ</a>
       <a href="#contacts" class="block text-white py-2 border-b border-white/10" data-i18n="nav.contacts">Контакты</a>
-      <div class="flex items-center gap-3 py-2 text-white">
-        <button class="lang-btn lang-active" data-lang="ru">RU</button>
-        <span class="text-white/40">|</span>
-        <button class="lang-btn text-white/70" data-lang="en">EN</button>
+      <div class="pt-4 pb-2">
+        <div class="lang-switcher mobile-lang-pill">
+          <svg class="lang-globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="2" y1="12" x2="22" y2="12"/>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+          </svg>
+          <button class="lang-btn lang-active" data-lang="ru">RU</button>
+          <button class="lang-btn" data-lang="en">EN</button>
+        </div>
       </div>
       <a href="#booking" class="block text-center btn-primary py-3 rounded-full font-semibold mt-3" data-i18n="nav.book">Забронировать</a>
     </div>
@@ -244,6 +375,25 @@
 
 <!-- ============== HERO ============== -->
 <section id="home" class="hero-bg relative min-h-screen flex items-center text-white overflow-hidden">
+  <!-- Слайды-картинки, перелистываются автоматически -->
+  <div class="hero-slide active" style="background-image: url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=2000&q=80')"></div>
+  <div class="hero-slide"        style="background-image: url('https://images.unsplash.com/photo-1454496522488-7a8e488e8606?auto=format&fit=crop&w=2000&q=80')"></div>
+  <div class="hero-slide"        style="background-image: url('https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=2000&q=80')"></div>
+  <div class="hero-slide"        style="background-image: url('https://images.unsplash.com/photo-1486870591958-9b9d0d1dda99?auto=format&fit=crop&w=2000&q=80')"></div>
+  <div class="hero-slide"        style="background-image: url('https://images.unsplash.com/photo-1551632811-561732d1e306?auto=format&fit=crop&w=2000&q=80')"></div>
+  <div class="hero-overlay"></div>
+
+  <!-- Контролы слайдера: стрелка ← точки → стрелка, по центру внизу -->
+  <div class="hero-controls">
+    <button class="hero-arrow" id="heroPrev" aria-label="Prev slide">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 6 9 12 15 18"/></svg>
+    </button>
+    <div class="hero-dots" id="heroDots"></div>
+    <button class="hero-arrow" id="heroNext" aria-label="Next slide">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+    </button>
+  </div>
+
   <div class="max-w-7xl mx-auto px-6 pt-24 pb-32 relative z-10">
     <div class="max-w-3xl">
       <div class="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-4 py-2 text-xs uppercase tracking-widest mb-6 animate-fade-in">
@@ -266,9 +416,6 @@
           <span data-i18n="hero.btn1">Посмотреть туры</span>
           <span>→</span>
         </a>
-        <a href="#booking" class="btn-outline px-8 py-4 rounded-full font-semibold inline-flex items-center gap-2" data-i18n="hero.btn2">
-          Оставить заявку
-        </a>
       </div>
 
       <div class="grid grid-cols-3 gap-6 md:gap-12 max-w-2xl mt-16 animate-fade-in" style="animation-delay:.8s; opacity:0;">
@@ -288,10 +435,10 @@
     </div>
   </div>
 
-  <div class="absolute bottom-8 left-1/2 -translate-x-1/2 scroll-indicator">
-    <a href="#tours" class="text-white/70 text-xs uppercase tracking-widest flex flex-col items-center gap-2">
+  <div class="absolute bottom-24 left-1/2 -translate-x-1/2 text-center z-10">
+    <a href="#tours" class="scroll-indicator-inner text-white/70 text-xs uppercase tracking-widest no-underline">
       <span data-i18n="hero.scroll">Вниз</span>
-      <span class="w-px h-12 bg-white/50"></span>
+      <span class="w-px h-10 bg-white/50 block mx-auto"></span>
     </a>
   </div>
 </section>
@@ -307,15 +454,7 @@
       </p>
     </div>
 
-    <div class="flex flex-wrap justify-center gap-3 mb-12" data-aos="fade-up" id="tourFilters">
-      <button class="tour-filter active px-5 py-2 rounded-full bg-night-900 text-white text-sm font-medium" data-cat="all" data-i18n="tours.f.all">Все туры</button>
-      <button class="tour-filter px-5 py-2 rounded-full bg-white text-night-700 text-sm font-medium border border-night-200" data-cat="mountain" data-i18n="tours.f.mountain">Горы</button>
-      <button class="tour-filter px-5 py-2 rounded-full bg-white text-night-700 text-sm font-medium border border-night-200" data-cat="city" data-i18n="tours.f.city">Город</button>
-      <button class="tour-filter px-5 py-2 rounded-full bg-white text-night-700 text-sm font-medium border border-night-200" data-cat="trek" data-i18n="tours.f.trek">Треккинг</button>
-      <button class="tour-filter px-5 py-2 rounded-full bg-white text-night-700 text-sm font-medium border border-night-200" data-cat="gastro" data-i18n="tours.f.gastro">Гастрономия</button>
-    </div>
-
-    <div id="toursGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
+    <div id="toursGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-4"></div>
 
     <div class="text-center mt-12" data-aos="fade-up">
       <a href="#booking" class="inline-flex items-center gap-2 text-accent font-semibold hover:gap-3 transition-all" data-i18n="tours.cta">
@@ -580,15 +719,37 @@
   </div>
 </section>
 
-<!-- ============== MAP ============== -->
+<!-- ============== MAP / GLOBE ============== -->
 <section id="map" class="py-24 bg-sand-50">
   <div class="max-w-7xl mx-auto px-6">
     <div class="text-center mb-12" data-aos="fade-up">
       <div class="text-accent text-sm uppercase tracking-widest mb-3" data-i18n="map.kicker">География</div>
       <h2 class="font-display text-3xl sm:text-4xl md:text-6xl text-night-900 mb-4" data-i18n="map.title">Карта маршрутов</h2>
-      <p class="text-night-500 max-w-2xl mx-auto" data-i18n="map.sub">Вот где мы ходим. Нажмите на маркер, чтобы посмотреть подробности.</p>
+      <p class="text-night-500 max-w-2xl mx-auto" data-i18n="map.sub">Endless exploration — наши маршруты по всему миру. Покрутите глобус и нажмите на любую точку.</p>
     </div>
-    <div id="routesMap" data-aos="fade-up"></div>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6" data-aos="fade-up">
+      <!-- Карта Google занимает 2/3 ширины на десктопе -->
+      <div class="lg:col-span-2 relative rounded-2xl overflow-hidden border border-sand-200 shadow-lg bg-sand-100">
+        <iframe
+          id="routesMap"
+          title="Карта маршрутов TERRA ALTUS"
+          src="about:blank"
+          width="100%" height="600" frameborder="0" scrolling="no"
+          style="border:0; display:block; width:100%; height:600px;"
+          allowfullscreen
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"></iframe>
+        <div class="absolute top-4 right-4 sm:top-6 sm:right-6 flex items-center gap-2 bg-white/95 backdrop-blur-sm border border-sand-200 px-3 py-2 rounded-full text-night-700 text-xs font-semibold pointer-events-none">
+          <span class="w-2 h-2 bg-accent rounded-full"></span>
+          <span><span id="routesCount">9</span> <span data-i18n="map.routes">маршрутов</span></span>
+        </div>
+      </div>
+
+      <!-- Список маршрутов — клик откроет точку в Google Maps в новой вкладке -->
+      <div class="lg:col-span-1 max-h-[600px] overflow-y-auto pr-2">
+        <div id="routesList" class="space-y-3"></div>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -683,16 +844,60 @@
   </div>
 </section>
 
+<!-- ============== PARTNERS ============== -->
+<section id="partners" class="py-16 sm:py-20 bg-sand-100 border-t border-sand-200">
+  <div class="max-w-7xl mx-auto px-6">
+    <div class="text-center mb-10 sm:mb-14" data-aos="fade-up">
+      <div class="text-accent text-sm uppercase tracking-widest mb-3" data-i18n="partners.kicker">Партнёры</div>
+      <h2 class="font-display text-3xl sm:text-4xl text-night-900 mb-3" data-i18n="partners.title">С кем мы работаем</h2>
+      <p class="text-night-500 max-w-xl mx-auto text-sm" data-i18n="partners.sub">Снаряжение, страхование и инфраструктура — от тех, кому мы доверяем сами.</p>
+    </div>
+
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-6 sm:gap-10 items-center" data-aos="fade-up">
+      <!-- Partner 1 -->
+      <div class="partner-logo flex items-center justify-center h-16 sm:h-20 px-4 py-3 bg-white rounded-xl border border-sand-200 grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition cursor-pointer" title="Alpina Equipment">
+        <svg viewBox="0 0 100 30" class="w-full h-7 fill-night-900"><path d="M5 22 L12 8 L19 22 L16 22 L14 18 L10 18 L8 22 Z M11 16 L13 16 L12 13 Z"/><text x="25" y="20" font-family="Manrope" font-weight="800" font-size="13" letter-spacing="1">ALPINA</text></svg>
+      </div>
+      <!-- Partner 2 -->
+      <div class="partner-logo flex items-center justify-center h-16 sm:h-20 px-4 py-3 bg-white rounded-xl border border-sand-200 grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition cursor-pointer" title="Peak Pro Gear">
+        <svg viewBox="0 0 100 30" class="w-full h-6 fill-night-900"><circle cx="10" cy="15" r="6" fill="none" stroke="currentColor" stroke-width="2"/><text x="20" y="20" font-family="Unbounded" font-weight="700" font-size="12" letter-spacing="2">PEAK PRO</text></svg>
+      </div>
+      <!-- Partner 3 -->
+      <div class="partner-logo flex items-center justify-center h-16 sm:h-20 px-4 py-3 bg-white rounded-xl border border-sand-200 grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition cursor-pointer" title="Everest Outfitters">
+        <svg viewBox="0 0 100 30" class="w-full h-7 fill-night-900"><path d="M3 22 L9 12 L13 18 L18 8 L24 22 Z"/><text x="29" y="20" font-family="Manrope" font-weight="700" font-size="11" letter-spacing="1">EVEREST</text></svg>
+      </div>
+      <!-- Partner 4 -->
+      <div class="partner-logo flex items-center justify-center h-16 sm:h-20 px-4 py-3 bg-white rounded-xl border border-sand-200 grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition cursor-pointer" title="Summit Insurance">
+        <svg viewBox="0 0 100 30" class="w-full h-7 fill-night-900"><path d="M8 22 L8 8 L14 8 L18 14 L22 8 L28 8 L28 22 L24 22 L24 14 L20 20 L16 14 L12 22 Z" fill="none" stroke="currentColor" stroke-width="1.5"/><text x="33" y="20" font-family="Unbounded" font-weight="600" font-size="10" letter-spacing="1">SUMMIT INS</text></svg>
+      </div>
+      <!-- Partner 5 -->
+      <div class="partner-logo flex items-center justify-center h-16 sm:h-20 px-4 py-3 bg-white rounded-xl border border-sand-200 grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition cursor-pointer" title="TrekCo Russia">
+        <svg viewBox="0 0 100 30" class="w-full h-7 fill-night-900"><rect x="3" y="10" width="14" height="10" rx="1" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 10 L10 4 L17 10" fill="none" stroke="currentColor" stroke-width="2"/><text x="22" y="20" font-family="Manrope" font-weight="800" font-size="13" letter-spacing="1">TREK·CO</text></svg>
+      </div>
+      <!-- Partner 6 -->
+      <div class="partner-logo flex items-center justify-center h-16 sm:h-20 px-4 py-3 bg-white rounded-xl border border-sand-200 grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition cursor-pointer" title="Nordland Apparel">
+        <svg viewBox="0 0 100 30" class="w-full h-6 fill-night-900"><path d="M6 22 L6 8 L10 8 L14 16 L14 8 L18 8 L18 22 L14 22 L10 14 L10 22 Z"/><text x="23" y="20" font-family="Unbounded" font-weight="700" font-size="11" letter-spacing="2">NORDLAND</text></svg>
+      </div>
+    </div>
+
+    <div class="text-center mt-10 sm:mt-14" data-aos="fade-up">
+      <a href="#contacts" class="inline-flex items-center gap-2 text-accent font-semibold hover:gap-3 transition-all" data-i18n="partners.cta">
+        Стать партнёром →
+      </a>
+    </div>
+  </div>
+</section>
+
 <!-- ============== FOOTER ============== -->
 <footer class="bg-night-900 text-white py-16">
   <div class="max-w-7xl mx-auto px-6">
     <div class="grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
       <div>
         <div class="flex items-center gap-3 mb-4">
-          <div class="w-11 h-11 rounded-full bg-accent flex items-center justify-center text-xl">▲</div>
-          <div>
-            <div class="font-display text-xl" data-i18n="brand">Андрей Гид</div>
-            <div class="text-white/50 text-xs uppercase tracking-wider" data-i18n="brandSub">авторские маршруты</div>
+          <img src="logo-icon.svg" alt="" class="h-12 w-auto flex-shrink-0" />
+          <div class="leading-tight">
+            <div class="font-bold text-2xl tracking-wide" data-i18n="brand">TERRA ALTUS</div>
+            <div class="text-white/50 text-[11px] tracking-[0.25em] uppercase mt-0.5" data-i18n="brandSub">endless exploration</div>
           </div>
         </div>
         <p class="text-white/60 text-sm" data-i18n="footer.about">Авторские туры в горы и по городу. Лицензированный гид, опыт 10+ лет.</p>
@@ -725,7 +930,7 @@
       </div>
     </div>
     <div class="pt-8 border-t border-white/10 flex flex-wrap items-center justify-between gap-4 text-white/40 text-sm">
-      <div data-i18n="footer.copyright">© 2026 Андрей Гид. Все права защищены.</div>
+      <div data-i18n="footer.copyright">© 2026 TERRA ALTUS. Все права защищены.</div>
       <div class="flex gap-6">
         <a href="#" class="hover:text-white" data-i18n="footer.legal1">Публичная оферта</a>
         <a href="#" class="hover:text-white" data-i18n="footer.legal2">Политика конфиденциальности</a>
@@ -735,7 +940,8 @@
 </footer>
 
 <!-- ============== ADMIN ============== -->
-<button id="adminFab" class="admin-fab w-14 h-14 rounded-full bg-night-900 text-white shadow-2xl hover:bg-accent transition flex items-center justify-center" title="Admin">
+<!-- Кнопка-шестерёнка скрыта по запросу. Чтобы вернуть — раскомментировать ниже. -->
+<button id="adminFab" class="admin-fab w-14 h-14 rounded-full bg-night-900 text-white shadow-2xl hover:bg-accent transition items-center justify-center" title="Admin" style="display:none">
   <span class="text-xl">⚙</span>
 </button>
 
@@ -804,7 +1010,7 @@
 <!-- Scripts -->
 <script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- Карта подключена через простой Google Maps iframe — никаких JS-библиотек не требуется -->
 
 <script>
 /* =========================================
@@ -812,7 +1018,7 @@
    ========================================= */
 const I18N = {
   ru: {
-    brand: 'Андрей Гид',  brandSub: 'авторские маршруты',
+    brand: 'TERRA ALTUS',  brandSub: 'endless exploration',
     'nav.tours':'Туры','nav.about':'О гиде','nav.gallery':'Галерея','nav.reviews':'Отзывы',
     'nav.map':'Маршруты','nav.blog':'Блог','nav.faq':'FAQ','nav.contacts':'Контакты','nav.book':'Забронировать',
     'hero.badge':'Лицензированный гид · 10+ лет опыта',
@@ -853,7 +1059,10 @@ const I18N = {
     'booking.sent':'Спасибо! Ваша заявка отправлена. Я свяжусь в течение часа.',
     'gallery.kicker':'Кадры с туров','gallery.title':'Галерея','gallery.sub':'Лучшее из того, что мы видели вместе.',
     'reviews.kicker':'Что говорят гости','reviews.title':'Отзывы','reviews.sub':'из 5 на основе 127 отзывов',
-    'map.kicker':'География','map.title':'Карта маршрутов','map.sub':'Вот где мы ходим. Нажмите на маркер, чтобы посмотреть подробности.',
+    'map.kicker':'География','map.title':'Карта маршрутов','map.sub':'Endless exploration — наши маршруты по всему миру. Покрутите глобус и нажмите на любую точку.',
+    'map.hint':'⤺ Покрутите глобус','map.routes':'маршрутов','map.routeLabel':'Маршрут',
+    'partners.kicker':'Партнёры','partners.title':'С кем мы работаем','partners.sub':'Снаряжение, страхование и инфраструктура — от тех, кому мы доверяем сами.',
+    'partners.cta':'Стать партнёром →',
     'blog.kicker':'Заметки','blog.title':'Блог','blog.all':'Все статьи →','blog.read':'Читать →',
     'faq.kicker':'Частые вопросы','faq.title':'FAQ','faq.sub':'Если ваш вопрос не здесь — напишите в WhatsApp или Telegram.',
     'contacts.kicker':'Связь','contacts.title':'Контакты',
@@ -866,7 +1075,7 @@ const I18N = {
     'footer.tours':'Туры','footer.tours.all':'Все маршруты','footer.tours.mountain':'Горные туры',
     'footer.tours.city':'Городские прогулки','footer.tours.gastro':'Гастро-туры',
     'footer.info':'Информация','footer.contacts':'Связь',
-    'footer.copyright':'© 2026 Андрей Гид. Все права защищены.',
+    'footer.copyright':'© 2026 TERRA ALTUS. Все права защищены.',
     'footer.legal1':'Публичная оферта','footer.legal2':'Политика конфиденциальности',
     'admin.title':'Админ-панель','admin.sub':'Управление контентом сайта',
     'admin.loginHint':'Войдите, чтобы редактировать туры, отзывы и блог. <span class="text-accent">(demo · admin / admin)</span>',
@@ -885,7 +1094,7 @@ const I18N = {
     'td.day':'День'
   },
   en: {
-    brand:'Andrey Guide', brandSub:'private mountain tours',
+    brand:'TERRA ALTUS', brandSub:'endless exploration',
     'nav.tours':'Tours','nav.about':'About','nav.gallery':'Gallery','nav.reviews':'Reviews',
     'nav.map':'Routes','nav.blog':'Blog','nav.faq':'FAQ','nav.contacts':'Contacts','nav.book':'Book a tour',
     'hero.badge':'Licensed guide · 10+ years of experience',
@@ -926,7 +1135,10 @@ const I18N = {
     'booking.sent':'Thank you! Your request has been sent. I\'ll be in touch within an hour.',
     'gallery.kicker':'Tour photos','gallery.title':'Gallery','gallery.sub':'The best moments from our journeys.',
     'reviews.kicker':'What guests say','reviews.title':'Reviews','reviews.sub':'of 5 based on 127 reviews',
-    'map.kicker':'Geography','map.title':'Route map','map.sub':'These are the places we go. Click a pin to see details.',
+    'map.kicker':'Geography','map.title':'Route map','map.sub':'Endless exploration — our routes around the world. Spin the globe and click any point.',
+    'map.hint':'⤺ Spin the globe','map.routes':'routes','map.routeLabel':'Route',
+    'partners.kicker':'Partners','partners.title':'Who we work with','partners.sub':'Gear, insurance and logistics — from the teams we trust ourselves.',
+    'partners.cta':'Become a partner →',
     'blog.kicker':'Notes','blog.title':'Blog','blog.all':'All articles →','blog.read':'Read →',
     'faq.kicker':'Common questions','faq.title':'FAQ','faq.sub':'If your question isn\'t here — drop me a line on WhatsApp or Telegram.',
     'contacts.kicker':'Reach out','contacts.title':'Contacts',
@@ -939,7 +1151,7 @@ const I18N = {
     'footer.tours':'Tours','footer.tours.all':'All routes','footer.tours.mountain':'Mountain tours',
     'footer.tours.city':'City walks','footer.tours.gastro':'Food tours',
     'footer.info':'Info','footer.contacts':'Contacts',
-    'footer.copyright':'© 2026 Andrey Guide. All rights reserved.',
+    'footer.copyright':'© 2026 TERRA ALTUS. All rights reserved.',
     'footer.legal1':'Public offer','footer.legal2':'Privacy policy',
     'admin.title':'Admin panel','admin.sub':'Manage website content',
     'admin.loginHint':'Log in to edit tours, reviews and blog posts. <span class="text-accent">(demo · admin / admin)</span>',
@@ -995,6 +1207,7 @@ function setLang(lang) {
 const DEFAULT_TOURS = [
   {
     id:1, cat:'mountain',
+    country: { ru:'Россия', en:'Russia' },
     img:'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=80',
     price:{ ru:'от 65 000 ₽', en:'from $750' },
     photos: [
@@ -1039,6 +1252,7 @@ const DEFAULT_TOURS = [
   },
   {
     id:2, cat:'trek',
+    country: { ru:'Кыргызстан', en:'Kyrgyzstan' },
     img:'https://images.unsplash.com/photo-1454496522488-7a8e488e8606?auto=format&fit=crop&w=1200&q=80',
     price:{ ru:'от 38 000 ₽', en:'from $420' },
     photos: [
@@ -1081,6 +1295,7 @@ const DEFAULT_TOURS = [
   },
   {
     id:3, cat:'city',
+    country: { ru:'Грузия', en:'Georgia' },
     img:'https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=1200&q=80',
     price:{ ru:'от 8 500 ₽', en:'from $95' },
     photos: [
@@ -1121,6 +1336,7 @@ const DEFAULT_TOURS = [
   },
   {
     id:4, cat:'mountain',
+    country: { ru:'Россия', en:'Russia' },
     img:'https://images.unsplash.com/photo-1486870591958-9b9d0d1dda99?auto=format&fit=crop&w=1200&q=80',
     price:{ ru:'от 4 500 ₽', en:'from $50' },
     photos: [
@@ -1158,6 +1374,7 @@ const DEFAULT_TOURS = [
   },
   {
     id:5, cat:'trek',
+    country: { ru:'Непал', en:'Nepal' },
     img:'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=1200&q=80',
     price:{ ru:'от 14 000 ₽', en:'from $160' },
     photos: [
@@ -1193,6 +1410,7 @@ const DEFAULT_TOURS = [
   },
   {
     id:6, cat:'gastro',
+    country: { ru:'Грузия', en:'Georgia' },
     img:'https://images.unsplash.com/photo-1547595628-c61a29f496f0?auto=format&fit=crop&w=1200&q=80',
     price:{ ru:'от 22 000 ₽', en:'from $250' },
     photos: [
@@ -1304,11 +1522,15 @@ const DEFAULT_FAQ = [
 const DEFAULT_TEXTS = { heroTitle: 'Авторские туры в твой ритм', heroSub: 'Индивидуальные и групповые маршруты...' };
 
 const ROUTES = [
-  { lat: 43.3499, lng: 42.4453, name: { ru:'Эльбрус',  en:'Mt. Elbrus' }, desc: { ru:'Восхождение на высшую точку Европы.', en:'Ascent of Europe\'s highest peak.' } },
-  { lat: 43.2367, lng: 42.4940, name: { ru:'Чегет',    en:'Mt. Cheget' }, desc: { ru:'Закатный треккинг.', en:'Sunset hike.' } },
-  { lat: 41.6938, lng: 44.8015, name: { ru:'Тбилиси',  en:'Tbilisi'    }, desc: { ru:'Гастро-тур по старому городу.', en:'Old town food tour.' } },
-  { lat: 41.6500, lng: 45.6906, name: { ru:'Кахетия',  en:'Kakheti'    }, desc: { ru:'Винные подвалы.', en:'Wine cellars.' } },
-  { lat: 43.2520, lng: 41.0667, name: { ru:'Сухум',    en:'Sukhumi'    }, desc: { ru:'Береговой треккинг.', en:'Coastal trekking.' } }
+  { lat: 43.3499, lng: 42.4453, name: { ru:'Эльбрус, Россия',     en:'Mt. Elbrus, Russia'     }, desc: { ru:'Восхождение на высшую точку Европы.', en:'Ascent of Europe\'s highest peak.' } },
+  { lat: 42.7000, lng: 44.5167, name: { ru:'Казбек, Грузия',      en:'Mt. Kazbek, Georgia'    }, desc: { ru:'Классическое восхождение на 5034 м.', en:'Classic 5034 m summit.' } },
+  { lat: 42.2167, lng: 80.1750, name: { ru:'Хан-Тенгри, Кыргызстан', en:'Khan Tengri, Kyrgyzstan' }, desc: { ru:'Семь озёр Тянь-Шаня.', en:'Tien Shan seven lakes trek.' } },
+  { lat: 28.0026, lng: 86.8528, name: { ru:'Эверест, Непал',      en:'Everest BC, Nepal'      }, desc: { ru:'Треккинг к базовому лагерю.', en:'Trek to base camp.' } },
+  { lat: 41.6938, lng: 44.8015, name: { ru:'Тбилиси, Грузия',     en:'Tbilisi, Georgia'       }, desc: { ru:'Гастро-тур по старому городу.', en:'Old town food tour.' } },
+  { lat:-32.6531, lng:-70.0109, name: { ru:'Аконкагуа, Аргентина', en:'Aconcagua, Argentina'  }, desc: { ru:'Высочайший пик Южной Америки.', en:'South America\'s highest peak.' } },
+  { lat: -3.0674, lng: 37.3556, name: { ru:'Килиманджаро, Танзания', en:'Kilimanjaro, Tanzania' }, desc: { ru:'Высшая точка Африки.', en:'Africa\'s rooftop.' } },
+  { lat: 45.8326, lng:  6.8652, name: { ru:'Монблан, Франция',    en:'Mont Blanc, France'     }, desc: { ru:'Восхождение в Альпах.', en:'Alpine ascent.' } },
+  { lat: 63.0695, lng:-151.0070, name: { ru:'Денали, Аляска',      en:'Denali, Alaska'         }, desc: { ru:'Высшая точка Северной Америки.', en:'North America\'s rooftop.' } }
 ];
 
 /* Storage */
@@ -1347,6 +1569,7 @@ function renderTours(cat='all') {
         <div class="absolute bottom-4 right-4 bg-accent text-white px-4 py-2 rounded-full text-sm font-bold">${L(tr,'price')}</div>
       </div>
       <div class="p-6">
+        ${L(tr,'country') ? `<div class="flex items-center gap-2 text-sm font-semibold text-night-900 mb-3 pb-3 border-b border-sand-200"><span class="w-1.5 h-1.5 rounded-full bg-accent inline-block flex-shrink-0"></span>${L(tr,'country')}</div>` : ''}
         <div class="text-xs uppercase tracking-widest text-accent mb-2">${L(tr,'subtitle')}</div>
         <h3 class="font-display text-2xl text-night-900 mb-2">${L(tr,'title')}</h3>
         <p class="text-night-500 text-sm mb-5">${L(tr,'desc')}</p>
@@ -1455,6 +1678,7 @@ function openTourDetail(id) {
   const itinerary = (tr[currentLang] && tr[currentLang].itinerary) || tr.ru.itinerary || [];
 
   document.getElementById('tourDetailContent').innerHTML = `
+    ${L(tr,'country') ? `<div class="bg-night-900 text-white px-5 sm:px-8 py-3 text-sm font-semibold flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-gold inline-block"></span>${L(tr,'country')}</div>` : ''}
     <div class="tour-detail-hero" style="background-image: url('${tr.img}');">
       <button class="tour-detail-close" onclick="closeTourDetail()">×</button>
       <div class="absolute bottom-0 left-0 right-0 p-4 sm:p-8 text-white">
@@ -1566,6 +1790,48 @@ document.getElementById('tourDetail').addEventListener('click', (e) => {
    INIT
    ========================================= */
 AOS.init({ duration: 800, once: true, offset: 80 });
+
+/* Hero slideshow */
+(function initHeroSlideshow() {
+  const slides = document.querySelectorAll('.hero-slide');
+  const dotsContainer = document.getElementById('heroDots');
+  if (!slides.length || !dotsContainer) return;
+
+  let current = 0;
+  const dots = [];
+  slides.forEach((_, i) => {
+    const dot = document.createElement('button');
+    dot.className = 'hero-dot' + (i === 0 ? ' active' : '');
+    dot.setAttribute('aria-label', 'Slide ' + (i+1));
+    dot.addEventListener('click', () => go(i));
+    dotsContainer.appendChild(dot);
+    dots.push(dot);
+  });
+
+  function go(idx) {
+    slides[current].classList.remove('active');
+    dots[current].classList.remove('active');
+    current = idx;
+    slides[current].classList.add('active');
+    dots[current].classList.add('active');
+  }
+
+  let timer = setInterval(() => go((current + 1) % slides.length), 5000);
+  function reset() {
+    clearInterval(timer);
+    timer = setInterval(() => go((current + 1) % slides.length), 5000);
+  }
+  // Стрелки
+  const prev = document.getElementById('heroPrev');
+  const next = document.getElementById('heroNext');
+  if (prev) prev.addEventListener('click', () => { go((current - 1 + slides.length) % slides.length); reset(); });
+  if (next) next.addEventListener('click', () => { go((current + 1) % slides.length); reset(); });
+
+  // Пауза при наведении
+  const hero = document.getElementById('home');
+  hero.addEventListener('mouseenter', () => clearInterval(timer));
+  hero.addEventListener('mouseleave', reset);
+})();
 
 applyTranslations();
 renderTours();
@@ -1682,19 +1948,66 @@ document.getElementById('quickContact').addEventListener('submit', (e) => {
   e.target.reset();
 });
 
-/* Map */
-let _map = null, _markers = [];
-function renderRoutes() {
-  if (!_map) {
-    _map = L.map('routesMap', { scrollWheelZoom: false }).setView([43.0, 43.5], 6);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap', maxZoom: 18 }).addTo(_map);
-  }
-  _markers.forEach(m => _map.removeLayer(m));
-  _markers = [];
-  ROUTES.forEach(r => {
-    const m = L.marker([r.lat, r.lng]).addTo(_map).bindPopup(`<strong>${r.name[currentLang] || r.name.ru}</strong><br>${r.desc[currentLang] || r.desc.ru}`);
-    _markers.push(m);
+/* Карта — Google Maps iframe + список маршрутов. q=lat,lng ставит булавку */
+let _activeRouteIdx = 0;
+function buildMapUrl(lat, lng, zoom) {
+  // q=lat,lng — ставит красную булавку. ll= только центрирует без булавки.
+  return `https://maps.google.com/maps?q=${lat},${lng}&z=${zoom}&hl=${currentLang}&t=m&output=embed`;
+}
+function setActiveRoute(i) {
+  _activeRouteIdx = i;
+  const r = ROUTES[i];
+  const iframe = document.getElementById('routesMap');
+  if (iframe && r) iframe.src = buildMapUrl(r.lat, r.lng, 7);
+  // Подсветка активной карточки
+  document.querySelectorAll('#routesList .route-card').forEach((c, idx) => {
+    if (idx === i) {
+      c.classList.add('route-card-active');
+    } else {
+      c.classList.remove('route-card-active');
+    }
   });
+}
+function renderRoutes() {
+  const listEl = document.getElementById('routesList');
+  const countEl = document.getElementById('routesCount');
+  if (!listEl) return;
+
+  if (countEl) countEl.textContent = ROUTES.length;
+
+  listEl.innerHTML = ROUTES.map((r, i) => {
+    const name = r.name[currentLang] || r.name.ru;
+    const desc = r.desc[currentLang] || r.desc.ru;
+    return `
+      <div class="route-card flex items-start gap-3 bg-white border border-sand-200 rounded-xl p-4" data-idx="${i}">
+        <div class="route-pin mt-1.5"></div>
+        <div class="flex-1 min-w-0">
+          <div class="font-display font-semibold text-night-900 text-base mb-1 truncate">${name}</div>
+          <div class="text-sm text-night-500 leading-snug">${desc}</div>
+        </div>
+        <div class="text-night-300 text-lg leading-none mt-1">→</div>
+      </div>`;
+  }).join('');
+
+  // Клик по карточке — ставим булавку в Google Maps на эту точку
+  listEl.querySelectorAll('.route-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const i = +card.dataset.idx;
+      setActiveRoute(i);
+      if (window.innerWidth < 1024) {
+        document.getElementById('map').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+
+  // Инициализируем карту: булавка на первом маршруте, более общий зум
+  if (ROUTES.length) {
+    const r0 = ROUTES[_activeRouteIdx] || ROUTES[0];
+    const iframe = document.getElementById('routesMap');
+    if (iframe) iframe.src = buildMapUrl(r0.lat, r0.lng, 5);
+    const firstCard = listEl.querySelector(`.route-card[data-idx="${_activeRouteIdx}"]`);
+    if (firstCard) firstCard.classList.add('route-card-active');
+  }
 }
 renderRoutes();
 
